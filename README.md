@@ -45,7 +45,7 @@ pthread:
 
 ​		发送接收数据保存的格式:TLV格式
 
-![1570166126792](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\1570166126792.png)
+![1570166126792](https://github.com/OnlyloveSY/Syinx/blob/master/screenshots/2dc6b61a242fae4d85c08743314afc98.png)
 
 
 
