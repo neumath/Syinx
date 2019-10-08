@@ -8,26 +8,48 @@ Libevent-based lightweight is suitable for game servers where multiple threads a
 
 > 版本:
 >
-> C/C++:0.1.3
+> C/C++:0.1.4
 >
 > Go:NULL
 >
 > 
 
+# 如何测试(how to test?)
 
+**编译与测试**
+
+`cmake .`
+
+`make`
+
+`./Syinx  run`
+
+`nc   你的IP地址   8855`
+
+**命令参数**
+
+`./Syinx  run`             启动并运行框架
+
+`./Syinx -s`                 显示当前每个工作线程的连接数与状态
+
+`./Syinx -v  `                  显示当前Syinx版本
+
+`./Syinx -c/close`     关闭当前框架并释放资源
+
+  
 
 # 依赖库(Dependent libraries)
 
-libevent :
+**libevent :安装与访问**
 
-> sudo apt-get install libevent
-> https://github.com/libevent/libevent
+`sudo apt-get install libevent`
+`https://github.com/libevent/libevent`
 
-pthread:
+**pthread:安装与访问**
 
-> sudo apt-get install glibc-doc
-> sudo apt-get install manpages-posix-dev
-> https://computing.llnl.gov/tutorials/pthreads/
+`sudo apt-get install glibc-doc`
+`sudo apt-get install manpages-posix-dev`
+`https://computing.llnl.gov/tutorials/pthreads/`
 
 
 
@@ -49,16 +71,16 @@ pthread:
 
 
 
-# 如何使用(How to use?)
+# 帮助(Help)
 
-```
+```c++
 #include "Syinx.h"                //包含框架核心头文件
 #include "SyTaskAdapter.h"        //需要包含任务流程处理头文件
 ```
 
 
 
-```
+```c++
 int main()
 {
 	SyinxKernelWork a(8855);    //指定框架绑定的端口号(默认为8855),框架会默认绑定 0.0.0.0 IP地址
@@ -69,7 +91,7 @@ int main()
 
 
 
-```
+```c++
 
 //用户可以指定该构造函数需要初始化或者用来创建哪些东西  当有新的客户端连接时会调用该默认构造
 IChannel::IChannel()
@@ -102,7 +124,7 @@ int IChannel::IChannelTaskProcessing()
 
 数据接收以及发送函数
 
-```
+```c++
 /*
 	@   -读取当前全部数据数据到string
 	@arg:不以任何协议格式将全部数据读取string并清空占存区
@@ -176,3 +198,18 @@ Syzinx -dev 0.1.3
 
 ​		--错误日志输出(未完成)
 
+
+
+Syzinx -dev 0.1.4
+
+​		  新增CMake文件
+
+​		  新增命令参数输入(详细见上面文档)
+
+​		  框架现为守护进程,不再是主进程并占用当前控制台
+
+​		--读写配置文件(未完成)
+
+​		--多线程基于数据库安全问题(未完成)
+
+​		--错误日志输出(未完成)
