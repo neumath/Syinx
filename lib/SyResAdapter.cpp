@@ -97,10 +97,10 @@ int SyinxAdapterResource::SyinxAdapterResource_Init(int _PthNum)
 
 	}
 	this->PthNum = _PthNum;
-	//添加事件文件描述符
+	//添加文件描述符
 	this->SyinxAdapterResource_Addtimefd();
 
-	std::cout << "basevec size:" << this->mSyBaseVec.size()<<"PthNum"<<this->PthNum << std::endl;
+	
 	return 0;
 }
 //将新连接的客户端进行分配
@@ -148,6 +148,10 @@ int SyinxAdapterResource::SocketFd_Add(SOCKETS _FD, int where, int events)
 	this->mSyChannelVec[where]->insert(std::make_pair(_FD, newClieICh));
 	
 	newClieICh->IChannelTaskInit();
+
+	//更新共享内存
+	this->SyinxAdapterResource_UpdateShm();
+
 	//设置buffer回调函数
 	bufferevent_setcb(buffer, SyinxBuffer_RecvData_Cb, SyinxBuffer_SendData_Cb, SyinxBuffer_Event_Cb, (void*)newClieICh);
 
@@ -173,6 +177,9 @@ int SyinxAdapterResource::SocketFd_Del(SOCKETS _FD, int where)
 		bufferevent_free(_DelICh->mICMsg->buffer);
 		_DelICh->IChannel_free();
 
+		//更新共享内存
+		this->SyinxAdapterResource_UpdateShm();
+		
 		delete _DelICh;
 
 	}
@@ -239,21 +246,53 @@ int SyinxAdapterResource::SyinxAdapterResource_Addtimefd()
 	return 0;
 }
 
+int SyinxAdapterResource::SyinxAdapterResource_Free()
+{
+	//释放map
+	if (&this->mSyChannelVec != NULL)
+	{
+		for (auto _Vec : this->mSyChannelVec)
+		{
+			delete _Vec;
+		}
+	}
+	return 0;
+}
+
+int SyinxAdapterResource::SyinxAdapterResource_UpdateShm()
+{
+	auto ShmData = this->mSyinx->ShmData;
+	auto mShmData = (SyinxKernelShmMsg*)ShmData;
+	int _Num = 0;
+	for (int i = 0; i < this->PthNum; ++i)
+	{
+		mShmData->CurrentClientNum[i] = this->mSyChannelVec[i]->size();
+		_Num += mShmData->CurrentClientNum[i];
+	}
+	mShmData->AllClientNum = _Num;
+
+}
+
+int SyinxAdapterResource::getClientNum(int where)
+{
+	if (where <0 | where >PthNum)
+		return 0;
+	return this->mSyChannelVec[where]->size();
+}
+
 int SyinxAdapterResource::getallClientNum()
 {
 	int _Num = 0;
 	for (auto _Vec : this->mSyChannelVec)
 	{
-		for (auto _Map : *_Vec)
-		{
-			++_Num;
-		}
+		_Num += _Vec->size();
 	}
 	return _Num;
 }
 
 int SyinxAdapterResource::deleteClient(SOCKETS _FD, int where)
 {
+	
 	this->SocketFd_Del(_FD, where);
 	return 1;
 }

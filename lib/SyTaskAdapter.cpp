@@ -8,6 +8,7 @@
 #include "SyAdapter.h"
 #include "SyTaskAdapter.h"
 #include "SyResAdapter.h"
+
 #ifdef SYINXMOD_ADD_MYSQL
 #include <mysql/mysql.h>
 #else
@@ -60,6 +61,8 @@ int IChannel::RecvValuesToString(unsigned int* _OutLen, unsigned int* _OutType, 
 			*_OutType = ValuesType;
 			this->StrByte->_InStr.erase(0, 8 + ValuesLen);
 			this->StrByte->_InSize -= (8 + ValuesLen);
+			if (this->StrByte->_InStr.size() >= 8)
+				return 8 + ValuesLen;
 		}
 		else 
 		{
@@ -126,6 +129,16 @@ int IChannel::SendValuesToString(unsigned int _InLen, unsigned int _InType, std:
 		_Num = strlen(_buf);
 	}
 	return _Num;
+}
+
+int IChannel::GetClientNumFromWork(int where)
+{
+	return this->mICnSaveRes->getClientNum(where);
+}
+
+int IChannel::GetAllClientNumFromWork()
+{
+	return this->mICnSaveRes->getallClientNum();
 }
 
 

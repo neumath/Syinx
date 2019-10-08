@@ -2,10 +2,10 @@
 #include <vector>
 #include <map>
 #include <iostream>
-
 #include "Syinx.h"
 #include "SyAdapter.h"
 #include "SyResAdapter.h"
+#include "SyPthreadPool.h"
 #include "SyPthreadAdapter.h"
 SyinxAdapterPth::SyinxAdapterPth()
 {
@@ -23,6 +23,7 @@ int SyinxAdapterPth::SyinxAdapterPriPth_Init()
 	auto PriPthPool = SyinxPthreadPool::PrincipalPth_create(this->PthNum);
 	this->mSyinxPriPthPool = PriPthPool;
 }
+
 
 int SyinxAdapterPth::SyinxAdapterPriPth_Setcb(std::vector<event_base*>* BaseVec, int flags, int locaiont)
 {
@@ -55,9 +56,9 @@ int SyinxAdapterPth::SyinxAdapterPriPth_Run()
 void* PrincipalPth_Cb(void* dst)
 {
 	//test
-	printf("pth is work pid is :%X\n", (unsigned int)pthread_self());
+	printf("\npth is work pid is : %X.............Ok\n", (unsigned int)pthread_self());
 	auto base = (event_base*)dst;
-	std::cout << base << std::endl;
+	std::cout << "pth save base index : " << base << std::endl;
 	int iRet;
 	do {
 		iRet = event_base_dispatch(base);
@@ -69,6 +70,7 @@ void* PrincipalPth_Cb(void* dst)
 		std::cout << iRet << std::endl;
 		sleep(1);
 		printf("pth is wait pid is :%X\n", (unsigned int)pthread_self());
+		
 			
 	} while (iRet >=0);
 

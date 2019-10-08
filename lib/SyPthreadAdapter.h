@@ -5,6 +5,8 @@
 class SyinxAdapter;
 class SyinxPthreadPool;
 
+struct threadpool_t;
+struct Principal_Pth;
 
 //主线程工作回调函数
 void* PrincipalPth_Cb(void* dst);
@@ -20,6 +22,7 @@ public:
 	~SyinxAdapterPth();
 	//初始化主工作线程池
 	int SyinxAdapterPriPth_Init();
+
 
 	//初始化回调函数参数结构体
 	int SyinxAdapterPriPth_InitMsg();

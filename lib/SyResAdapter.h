@@ -25,11 +25,15 @@ public:
 	SyinxAdapterResource(int PthNum) :PthNum(PthNum) {}
 	~SyinxAdapterResource();
 
+	//获取指定哪个集群玩家数量
+	int getClientNum(int where);
 	//获取集群中所有活跃玩家数量
 	int getallClientNum();
 
 	//将集群中某一个玩家清除
 	int deleteClient(SOCKETS _FD, int where);
+
+	
 
 	//将客户端设置定为随机分配,但是不允许超过最大允许的范围
 	int SetClientRandAllot(bool flags);
@@ -53,6 +57,11 @@ private:
 	//为base添定时器
 	int SyinxAdapterResource_Addtimefd();
 
+	//释放资源组件
+	int SyinxAdapterResource_Free();
+
+	//更新共享内存
+	int SyinxAdapterResource_UpdateShm();
 private:/*绑定(mRes+Task 资源管理器绑定任务管理器)*/
 	//绑定任务类
 	SyinxAdapterMission* mResTask;

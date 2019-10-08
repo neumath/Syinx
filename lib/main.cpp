@@ -32,9 +32,9 @@ int IChannel::IChannelTaskProcessing()
 	cout << Test << endl;
 	
 }
-int main()
+int main(int argc, char* argv[])
 {
-	SyinxKernelWork a(8855);
+	SyinxKernelWork a(8855, argc, argv);
 	
-	return a.SyinxClose();
+	return a.SyinxKernelExit;
 }

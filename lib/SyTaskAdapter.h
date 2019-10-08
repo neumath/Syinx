@@ -91,7 +91,12 @@ public:
 	*/
 	int SendValuesToString(unsigned int _InLen, unsigned int _InType, std::string& _InStr);
 
-	
+	//获取当前工作任务的客户端数量
+	int GetClientNumFromWork(int where);
+
+	//获取所有工作的任务的客户端数量
+	int GetAllClientNumFromWork();
+
 	//保存下一个工作节点的指针
 	void* _NextNode;
 
@@ -125,7 +130,7 @@ private:
 	int DatatoInStrByte(char* buf);
 
 	
-private:
+private://绑定资源管理器
 	SyinxAdapterResource* mICnSaveRes;
 };
 
