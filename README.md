@@ -13,6 +13,7 @@ Libevent-based lightweight is suitable for game servers where multiple threads a
 > Go:NULL
 >
 > 
+开发: SiCen Li
 
 # 如何测试(how to test?)
 
