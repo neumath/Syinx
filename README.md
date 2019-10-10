@@ -1,8 +1,8 @@
 
 
-![miku](F:\Project\Syinx-git\Syinx\screenshots\miku.png)
+![miku](https://github.com/OnlyloveSY/Syinx/blob/master/screenshots/miku.png)
 
-![Syinx](F:\Project\Syinx-git\Syinx\screenshots\Syinx.png)
+![Syinx](https://github.com/OnlyloveSY/Syinx/blob/master/screenshots/Syinx.png)
 
 ------
 
