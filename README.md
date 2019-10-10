@@ -6,7 +6,7 @@
 
 ------
 
-
+[![Syinx](https://github.com/OnlyloveSY/Syinx/blob/master/screenshots/goto.svg)](https://www.jianshu.com/u/3f6b82b7329d)
 
 
 
