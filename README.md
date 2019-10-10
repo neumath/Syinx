@@ -1,6 +1,10 @@
-# Syinx for C++/Go
 
 
+![miku](F:\Project\Syinx-git\Syinx\screenshots\miku.png)
+
+![Syinx](F:\Project\Syinx-git\Syinx\screenshots\Syinx.png)
+
+------
 
 基于libevent的轻量级适用于游戏的服务器,使用多线程,对不同base事件树进行遍历访问,而不是对单个任务进行线程处理
 
