@@ -6,6 +6,8 @@
 
 ------
 
+[![Syinx简介](https://camo.githubusercontent.com/6057e3f3dcfaf7cb6bfda1cbf26eafda16cebd14/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f2545352538452539462545352538382539422545342542392541362545372542312538442545342542382538422545382542442542442d476974626f6f6b2d626c61636b2e737667)](https://www.jianshu.com/u/3f6b82b7329d)
+
 基于libevent的轻量级适用于游戏的服务器,使用多线程,对不同base事件树进行遍历访问,而不是对单个任务进行线程处理
 
 Libevent-based lightweight is suitable for game servers where multiple threads are used to traverse different base event trees instead of threading individual tasks
