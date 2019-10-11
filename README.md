@@ -1,12 +1,12 @@
 
 
-![miku](F:\Project\Syinx-git\Syinx\screenshots\miku.png)
+![miku](https://github.com/OnlyloveSY/Syinx/blob/master/screenshots/miku.png)
 
-![Syinx](F:\Project\Syinx-git\Syinx\screenshots\Syinx.png)
+![Syinx](https://github.com/OnlyloveSY/Syinx/blob/master/screenshots/Syinx.png)
 
 ------
 
-
+[![Syinx](https://github.com/OnlyloveSY/Syinx/blob/master/screenshots/goto.svg)](https://www.jianshu.com/u/3f6b82b7329d)
 
 
 
@@ -222,3 +222,19 @@ Syzinx -dev 0.1.4
 ​		--多线程基于数据库安全问题(未完成)
 
 ​		--错误日志输出(未完成)
+
+
+
+Syzinx -dev 0.1.5
+
+​			修复线程当前状态查看`./Syinx -s`命令可查看
+
+​			修复计时器,每个线程不在无限调用计时器timerfd的回调函数,而是修改为第一次开始1s,周期1s
+
+​			--后续将为计时器添加消息队列以及心跳包
+
+​			--读写配置文件(未完成)
+
+​			--多线程基于数据库安全问题(未完成)
+
+​			--错误日志输出(未完成)
