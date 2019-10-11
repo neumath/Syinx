@@ -73,9 +73,9 @@ void SyinxBuffer_Event_Cb(struct bufferevent* buffer, short events, void* arg)
 
 }
 //时间处理回调
-void SyinxTimer_Event_Cb(evutil_socket_t fd, short what, void* arg)
+void SyinxTimer_Event_Cb(struct bufferevent* buffer, void* arg)
 {
-
+	
 }
 
 int SyinxAdapterResource::SyinxAdapterResource_Init(int _PthNum)
@@ -181,6 +181,8 @@ int SyinxAdapterResource::SocketFd_Del(SOCKETS _FD, int where)
 		this->SyinxAdapterResource_UpdateShm();
 		
 		delete _DelICh;
+		
+		return 1;
 
 	}
 	else
@@ -192,56 +194,39 @@ int SyinxAdapterResource::SocketFd_Del(SOCKETS _FD, int where)
 int SyinxAdapterResource::SyinxAdapterResource_Addtimefd()
 {
 	struct itimerspec setitimerspec;
+	//set 周期
 	setitimerspec.it_interval.tv_sec = 1;
 	setitimerspec.it_interval.tv_nsec = 0;
 
+	//set 第一次
 	setitimerspec.it_value.tv_sec = 1;
 	setitimerspec.it_value.tv_nsec = 0;
 	int tmfd;
-#if 0
-	for (auto it = this->mSyBaseVec.begin(); it != this->mSyBaseVec.end(); ++it)
-	{
 
-		tmfd = timerfd_create(CLOCK_MONOTONIC, 0);
-		if (tmfd <= 0)
-		{
-			mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, tmfd, "timefd_create is failed");
-		}
-		int iRet = timerfd_settime(tmfd, 0, &setitimerspec, NULL);
-		if (iRet <= 0)
-		{
-			mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, tmfd, "timefd_create is failed");
-		}
-		auto timer_event = event_new(*it, tmfd, SET_SOCKETS_EVENT_RD, SyinxTimer_Event_Cb, NULL);
-
-		iRet = event_add(timer_event, NULL);
-		if (iRet < 0)
-		{
-			mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, tmfd, "event_add(timer_event) is failed");
-		}
-	}
-#else
 	for (auto it : this->mSyBaseVec)
 	{
 		tmfd = timerfd_create(CLOCK_MONOTONIC, 0);
 		if (tmfd <= 0)
 		{
+			std::cout << "timerfd_create if failed" << std::endl;
 			mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, tmfd, "timefd_create is failed");
 		}
 		int iRet = timerfd_settime(tmfd, 0, &setitimerspec, NULL);
 		if (iRet <= 0)
 		{
+			std::cout << "timerfd_settime if failed" << std::endl;
 			mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, iRet, "timefd_create is failed");
 		}
-		auto timer_event = event_new(it, tmfd, SET_SOCKETS_EVENT_RD, SyinxTimer_Event_Cb, NULL);
-		
-		iRet = event_add(timer_event, NULL);
-		if (iRet < 0)
-		{
-			mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, iRet, "event_add(timer_event) is failed");
-		}
+
+		auto buffer = bufferevent_socket_new(it, tmfd, BEV_OPT_CLOSE_ON_FREE);
+
+		bufferevent_setcb(buffer, SyinxTimer_Event_Cb,NULL ,NULL , NULL);
+
+		//设置buffer事件
+		bufferevent_enable(buffer, EV_READ);
+
 	}
-#endif
+
 
 	return 0;
 }
@@ -293,7 +278,7 @@ int SyinxAdapterResource::getallClientNum()
 int SyinxAdapterResource::deleteClient(SOCKETS _FD, int where)
 {
 	
-	this->SocketFd_Del(_FD, where);
-	return 1;
+	return this->SocketFd_Del(_FD, where);
+	
 }
 

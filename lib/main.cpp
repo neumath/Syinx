@@ -20,6 +20,8 @@ int IChannel::IChannelTaskInit()
 {
 	std::string _send = "hello world";
 	this->SendAllDataToString(_send);
+	
+	//this->ClientExit();
 }
 /*
 @  -用户需要在该任务流程处理函数内写入你所后续规划的其他函数

@@ -243,6 +243,7 @@ void SyinxKernel::SyinxSyinxKernel_MakeShm()
 	mShmData->PthNum = mSyinx->PthNum;
 	mShmData->SyinxKernewWork = true;
 	mShmData->ExitSignal = false;
+
 	strcpy(mShmData->IP, mSyinx->Server_Sockaddr.sin_addr.c_str());
 	strcpy(mShmData->Port, mSyinx->Server_Sockaddr.Prot.c_str());
 
@@ -296,7 +297,22 @@ void SyinxKernelWork::PrintfServerStatus()
 	printf("WorkTid           Status            Connects           Capacity\n");
 	for (int i = 0; i < mShmData->PthNum; ++i)
 	{
-		printf("%X           run                %d                   \n", mShmData->threads[i], mShmData->CurrentClientNum[i]);
+		printf("%X           ", mShmData->threads[i]);
+		switch (mShmData->mPthStatus[i])
+		{
+		case PthRun:
+			cout << "run";
+			break;
+		case PthWait:
+			cout << "wait";
+			break;
+		case PthExit:
+			cout << "exit";
+			break;
+		default:
+			/*do nothing*/;
+		}
+		printf("                 %d", mShmData->CurrentClientNum[i]);
 	}
 	
 	printf("\n");
@@ -345,7 +361,7 @@ void SyinxKernelWork::SyinxExit()
 	sockaddr_in addr;
 	addr.sin_family = AF_INET;
 	addr.sin_port = htons(Port);
-	inet_pton(AF_INET, "192.168.12.31", &addr.sin_addr.s_addr);
+	inet_pton(AF_INET, "192.168.12.75", &addr.sin_addr.s_addr);
 
 	int _fd = socket(AF_INET, SOCK_STREAM, 0);
 

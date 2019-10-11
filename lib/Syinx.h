@@ -1,4 +1,3 @@
-
 #ifndef _Syinx_H_
 #define _Syinx_H_
 #include "SyInc.h"
@@ -29,16 +28,23 @@ struct SyinxKernelShmMsg
 	int AllClientNum;         /*所有客户端连接数量*/
 
 	int CurrentClientNum[4];
-	pthread_t threads[4];       /*保存每一个tid*/
 
-	char IP[16];                /*保存ip*/
+	pthread_t threads[4];        /*保存每一个tid*/
+	int       mPthStatus[4];     /*保存每一个线程的工作状态*/
 
-	char Port[8];               /*保存端口号*/
+	char IP[16];                 /*保存ip*/
 
-	bool ExitSignal;              /*syinx退出信号*/
+	char Port[8];                /*保存端口号*/
+
+	bool ExitSignal;             /*syinx退出信号*/
 
 }; 
-
+enum  PthStatus
+{
+	PthRun = 0,
+	PthWait,
+	PthExit,
+};
 class SyinxLog;
 class IChannel;
 class SyinxAdapterMission;
