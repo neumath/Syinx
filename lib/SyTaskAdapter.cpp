@@ -131,6 +131,12 @@ int IChannel::SendValuesToString(unsigned int _InLen, unsigned int _InType, std:
 	return _Num;
 }
 
+int IChannel::ClientExit()
+{
+	//委托资源管理器退出
+	return this->mICnSaveRes->deleteClient(this->mICMsg->Socket, this->mICMsg->Where);
+}
+
 int IChannel::GetClientNumFromWork(int where)
 {
 	return this->mICnSaveRes->getClientNum(where);

@@ -91,6 +91,13 @@ public:
 	*/
 	int SendValuesToString(unsigned int _InLen, unsigned int _InType, std::string& _InStr);
 
+	
+	/*
+	@   -让当前客户度你退出服务器并释放空间
+	@成功返回1,失败返回-1
+	*/
+	int ClientExit();
+
 	//获取当前工作任务的客户端数量
 	int GetClientNumFromWork(int where);
 
