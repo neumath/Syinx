@@ -2,6 +2,9 @@
 #include <vector>
 #include <map>
 #include <iostream>
+#include <sys/shm.h>
+#include <sys/types.h>
+#include <sys/ipc.h>
 #include "Syinx.h"
 #include "SyAdapter.h"
 #include "SyResAdapter.h"
@@ -59,20 +62,45 @@ void* PrincipalPth_Cb(void* dst)
 	printf("\npth is work pid is : %X.............Ok\n", (unsigned int)pthread_self());
 	auto base = (event_base*)dst;
 	std::cout << "pth save base index : " << base << std::endl;
+
+	int shmid = shmget(SET_SHM_KEY, 0, 0);
+	if (-1 == shmid)
+	{
+		printf("pth %X open shm is failed\n", pthread_self());
+	}
+	void* ShmData = shmat(shmid, NULL, 0);
+	if (NULL == ShmData)
+	{
+		printf("pth %X shmat is failed\n", pthread_self());
+	}
+
+	//设置当前线程的启动状态
+	auto mShmData = (SyinxKernelShmMsg*)ShmData;
+	int _Index = 0;
+	while (true)
+	{
+		if (mShmData->threads[_Index] != pthread_self())
+			++_Index;
+		else
+			break;
+	}
+	//设置线程工作状态
+
 	int iRet;
 	do {
+		mShmData->mPthStatus[_Index] = PthRun;
 		iRet = event_base_dispatch(base);
 		//iRet = event_base_loop(base, EVLOOP_ONCE );
 		if (iRet < 0)
 		{
 			break;
 		}
-		std::cout << iRet << std::endl;
 		sleep(1);
-		printf("pth is wait pid is :%X\n", (unsigned int)pthread_self());
-		
-			
+		mShmData->mPthStatus[_Index] = PthWait;
 	} while (iRet >=0);
+
+	mShmData->mPthStatus[_Index] = PthExit;
+	shmdt(ShmData);
 
 	printf("pth is exit pid is :%X\n", (unsigned int)pthread_self());
 	pthread_exit(0);
