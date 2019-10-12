@@ -1,12 +1,12 @@
 
 
-![miku](https://github.com/OnlyloveSY/Syinx/blob/master/screenshots/miku.jpeg)
+![miku](https://github.com/OnlyloveSY/ResPic/blob/master/screenshots/miku.jpeg)
 
-![Syinx](https://github.com/OnlyloveSY/Syinx/blob/master/screenshots/Syinx.png)
+![Syinx](https://github.com/OnlyloveSY/ResPic/blob/master/screenshots/Syinx.png)
 
 ------
 
-[![Syinx](https://github.com/OnlyloveSY/Syinx/blob/master/screenshots/goto.svg)](https://www.jianshu.com/u/3f6b82b7329d)
+[![Syinx](https://github.com/OnlyloveSY/ResPic/blob/master/screenshots/goto.svg)](https://www.jianshu.com/u/3f6b82b7329d)
 
 
 
