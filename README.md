@@ -64,7 +64,7 @@ Libevent-based lightweight is suitable for game servers where multiple threads a
 
 # 概述(overview)
 
-![1570001828106](https://github.com/OnlyloveSY/Syinx/blob/master/screenshots/b1b193957bd55749b99d03b77b8f8f7f.png)
+![1570001828106](https://github.com/OnlyloveSY/ResPic/blob/master/screenshots/b1b193957bd55749b99d03b77b8f8f7f.png)
 
 ​        通过配置文件读取用户设置的服务器基础参数以及当前主要工作线程数量来进行初始化，并为框架设定好回调函数，以4主要线程为例，当有客户端连接服务器时，触发listener回调函数，返回客户端的文件描述符（Socketfd），此时委托resource adapter类的初始化客户端的bufferevent读事件回调函数，写事件回调函数，错误事件回调函数，并且对后续业务设定一个ichannel通道层，此时Socketfd会被添加到resource adapter的map容器，并且在此之前会根据不同的要求添加到不同的base事件树上
 
@@ -76,7 +76,7 @@ Libevent-based lightweight is suitable for game servers where multiple threads a
 
 ​		发送接收数据保存的格式:TLV格式
 
-![1570166126792](https://github.com/OnlyloveSY/Syinx/blob/master/screenshots/2dc6b61a242fae4d85c08743314afc98.png)
+![1570166126792](https://github.com/OnlyloveSY/ResPic/blob/master/screenshots/2dc6b61a242fae4d85c08743314afc98.png)
 
 
 
