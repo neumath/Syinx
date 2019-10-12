@@ -1,6 +1,6 @@
 
 
-![miku](https://github.com/OnlyloveSY/Syinx/blob/master/screenshots/miku.png)
+![miku](https://github.com/OnlyloveSY/Syinx/blob/master/screenshots/miku.jpeg)
 
 ![Syinx](https://github.com/OnlyloveSY/Syinx/blob/master/screenshots/Syinx.png)
 
