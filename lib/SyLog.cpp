@@ -7,13 +7,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <unistd.h>
 //#include <unistd.h>
 #include "SyLog.h"
 #include <string>
 using namespace std;
 
-
-const string SYINX_DEBUG_FILE  = "itderlog.log";
+SyinxLog SyinxLog::mLog;
+const string SYINX_DEBUG_FILE  = "Syderlog.log";
 const int SYINX_MAX_STRING_LEN =  10240;
 
 //Level的名称
@@ -50,13 +51,14 @@ int SyinxLog::SYINX_Error_OpenFile(int *pf)
 #else
     sprintf(fileName, "./log/%s", SYINX_DEBUG_FILE.data());
 #endif
-#if 0
+#if 1
     *pf = open(fileName, O_WRONLY | O_CREAT | O_APPEND, 0666);
     if (*pf < 0)
     {
         return -1;
     }
 #endif
+	
     return 0;
 }
 
@@ -109,7 +111,7 @@ void SyinxLog::SYINX_Error_Core(const char *file, int line, int level, int statu
     {
         return;
     }
-#if 0
+#if 1
     //写入LOG文件
     write(pf, str, strLen);
     //IC_Log_Error_WriteFile(str);

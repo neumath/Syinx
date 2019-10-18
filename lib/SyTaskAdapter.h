@@ -8,7 +8,7 @@ struct IChannelMsg
 	
 	int             Socket;                  /*保存套接字*/
 	bufferevent*    buffer;                  /*保存buffer*/
-	int             Where;                   /*保存在哪一个事件树*/
+
 	int             ClientID;                /*客户端唯一id*/
     
 };
@@ -44,8 +44,6 @@ struct StringByte
 class IChannel : public SyinxAdapterMission
 {
 	friend class SyinxAdapterResource;
-	friend void SyinxBuffer_RecvData_Cb(struct bufferevent* buffer, void* arg);
-	friend void SyinxBuffer_Event_Cb(struct bufferevent* buffer, short events, void* arg);
 public:
 	IChannel();
 	virtual ~IChannel();
@@ -91,18 +89,6 @@ public:
 	*/
 	int SendValuesToString(unsigned int _InLen, unsigned int _InType, std::string& _InStr);
 
-	
-	/*
-	@   -让当前客户度你退出服务器并释放空间
-	@成功返回1,失败返回-1
-	*/
-	int ClientExit();
-
-	//获取当前工作任务的客户端数量
-	int GetClientNumFromWork(int where);
-
-	//获取所有工作的任务的客户端数量
-	int GetAllClientNumFromWork();
 
 	//保存下一个工作节点的指针
 	void* _NextNode;
@@ -118,16 +104,6 @@ public:
 	//保存通道层的属性
 	IChannelMsg* mICMsg;
 private:
-	/*
-	@节点处理函数,主动调用函数,当客户端连接服务器时将会调用该函数
-
-	*/
-	int IChannelTaskInit();
-	/*
-	@节点处理函数,被动调用函数,当客户端发来数据时该函数才会有响应
-	
-	*/
-	int IChannelTaskProcessing();
 	//初始化通道层
 	int ICannel_Init(IChannelMsg* Info);
 	//销毁通道层

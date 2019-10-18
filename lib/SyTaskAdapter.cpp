@@ -26,8 +26,7 @@ int IChannel::RecvAllDataToString(std::string &arg)
 {
 	if (this->StrByte->_InStr.size() <= 0 || this->StrByte->_InStr.size() != StrByte->_InSize)
 	{
-		mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, -1, "_Instr size  err");
-		std::cout << "_instr size err" << std::endl;
+		mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, -1, "Buffer is empty : _Instr size 0");
 		return -1;
 	}
 	int _Size = this->StrByte->_InStr.size();
@@ -131,21 +130,6 @@ int IChannel::SendValuesToString(unsigned int _InLen, unsigned int _InType, std:
 	return _Num;
 }
 
-int IChannel::ClientExit()
-{
-	//委托资源管理器退出
-	return this->mICnSaveRes->deleteClient(this->mICMsg->Socket, this->mICMsg->Where);
-}
-
-int IChannel::GetClientNumFromWork(int where)
-{
-	return this->mICnSaveRes->getClientNum(where);
-}
-
-int IChannel::GetAllClientNumFromWork()
-{
-	return this->mICnSaveRes->getallClientNum();
-}
 
 
 int IChannel::ICannel_Init(IChannelMsg* Info)

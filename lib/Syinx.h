@@ -14,9 +14,34 @@
 //命令参数
 #define COMMMEND_PARAM                                   argv[1]
 #define SET_SHM_KEY                                      0x8855
+                                  
 
 #define SYINXMOD_ADD_MYSQL                               
-#define SYINXMOD_ADD_ORACLE    
+enum  PthStatus
+{
+	PthRun = 0,
+	PthWait,
+	PthExit,
+};
+/*
+	声明需要写入log的事件发生级别的字符串
+	分为
+	EVENT    事件发生   1
+	WARNING  警告       2
+	ERROR    错误       3
+*/
+
+
+enum SyinxKernelErrno
+{
+	PortErr = 3,
+	CreateBaseErr = 3,
+	ClientConErr = 3,
+};
+
+
+
+class SyinxKernel;
 
 //框架全部信息用于进程通信
 struct SyinxKernelShmMsg
@@ -27,42 +52,46 @@ struct SyinxKernelShmMsg
 
 	int AllClientNum;         /*所有客户端连接数量*/
 
-	int CurrentClientNum[4];
-
-	pthread_t threads[4];        /*保存每一个tid*/
-	int       mPthStatus[4];     /*保存每一个线程的工作状态*/
-
 	char IP[16];                 /*保存ip*/
 
 	char Port[8];                /*保存端口号*/
 
 	bool ExitSignal;             /*syinx退出信号*/
 
+	SyinxKernel* mSyinx;         /*保存框架的地址*/
+
 }; 
-enum  PthStatus
+struct SyinxKernelTimer_task_t
 {
-	PthRun = 0,
-	PthWait,
-	PthExit,
+	void* (*taskfunc)(void*);
+	void* arg;
 };
+
 class SyinxLog;
 class IChannel;
 class SyinxAdapterMission;
 class SyinxAdapterPth;
 class SyinxAdapterResource;
 class SyinxPthreadPool;
+class SyinxConfig;
 
 class SyinxKernel;
 struct SyinxKernelShmMsg;
+struct SyinxConfMsg;
 
-class SyinxKernelObject
-{
-public:
-	SyinxKernelObject() {}
-	~SyinxKernelObject() {}
-private:
 
-};
+//声明回调
+//时间处理回调
+void SyinxKernel_TimerEvent_Cb(struct bufferevent* buffer, void* arg);
+//读出回调
+void SyinxKernel_Recv_Cb(struct bufferevent* bev, void* ctx);
+//写事件回调
+void SyinxKernel_Send_Cb(struct bufferevent* bev, void* ctx);
+//事件回调
+void SyinxKernel_Event_Cb(struct bufferevent* bev, short what, void* ctx);
+
+//声明一个任务函数
+void* IChannelTaskProcessing(void* arg);
 //用于初始化的核心框架
 class SyinxKernel 
 {
@@ -71,10 +100,11 @@ class SyinxKernel
 	friend class SyinxRecycle;
 	friend class SyinxAdapterResource;
 	friend void SyinxKernel_Listen_CB(struct evconnlistener* listener, evutil_socket_t fd, struct sockaddr* sock, int socklen, void* arg);
+	friend void SyinxKernel_TimerEvent_Cb(struct bufferevent* buffer, void* arg);
 public:
 	
 	//初始化框架
-	static int SyinxKernel_Init(const short _inPort);
+	static int SyinxKernel_Init();
 
 
 	//运行框架(wait)
@@ -83,29 +113,32 @@ public:
 	//关闭框架
 	static void SyinxKernel_Close();
 
-	//客户端退出时将会释放客户端任务链,客户端文件描述符为key值       已废弃
-	static void SyinxKernel_Client_Close(const int mClient_fd);
 
 	//通过共享内存共享数据情报
 	//创建共享内存
-	static void SyinxSyinxKernel_MakeShm();
+	static void SyinxKernel_MakeShm();
 	
 	//释放共享内存
-	static void SyinxSyinxKernel_FreeShm();
+	static void SyinxKernel_FreeShm();
 
 	//创建初始化本地套接字
-	static void SyinxSyinxKernel_LocalSock();
+	static void SyinxKernel_LocalSock();
 
-	SyinxLog mLog;
+	//返回共享内存地址
+	SyinxKernelShmMsg* GetSyinxKernelShmMsg()const;
+
 private:
+	//为自己添加时间计时器
+	void SyinxKernel_Addtimefd();
+
+	//保存基于事件描述符的事件队列
+
+	SyinxKernelTimer_task_t** TimeEvent_Task;
 	//框架初始化适配器
 	int SyinxKernel_InitAdapter();
 
-	//过程初始化
-	int SyinxKernel_Procedureinit();
-
 private:
-	//用于保存一个主要的base句柄
+	//用于保存一个主要的base句柄只适用于连接
 	struct event_base* SyinxBase;
 
 	//保存用于监听套接字的evconnlistener
@@ -119,10 +152,13 @@ private:
 
 	//保存共享内存的万能指针
 	void* ShmData;
-	SyinxKernelShmMsg* mShmData;
+	SyinxKernelShmMsg* mShmData = nullptr;
 	
 	//保存本套接字
 	int LocalSocket;
+
+	//保存读取配置文件的信息
+	SyinxConfMsg* SyConfMsg;         //free
 public:
 	//绑定一份一个SyinxAdapterPt线程适配器
 	SyinxAdapterPth* mSyPth;
@@ -132,7 +168,7 @@ public:
 	SyinxAdapterResource* mSyResource;
 
 public:
-	int PthNum = 1;
+
 	//保存服务器的sockaddr_in
 	struct Server_Sockaddr {
 		std::string Prot;
@@ -163,7 +199,7 @@ class SyinxKernelWork
 {
 public:
 	SyinxKernelWork(){}
-	SyinxKernelWork(int Prot, int argc, char* argv[]);
+	SyinxKernelWork(int argc, char* argv[]);
 	~SyinxKernelWork();
 public:
 	
@@ -171,14 +207,13 @@ public:
 	void PrintfServerStatus();
 
 	
-	void Makedaemon(int Prot);
+	void Makedaemon();
 
 	void SyinxExit();
 
 	//保存框架的地址
 	SyinxKernel* mSyinx;
 
-	int Port;
 
 	//保存进程id
 	int Pid_t;

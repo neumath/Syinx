@@ -16,19 +16,29 @@ const char *fmt：可变参数
 */
 /************************************************************************/
 // 日志类
+
+
 class SyinxLog
 {
 public:
-    enum LogLevel{NOLOG, DEBUG, INFO, WARNING, ERROR};
+	enum LogLevel {
+		NOLOG,
+		DEBUG,
+		INFO,
+		WARNING,
+		ERROR,
+		EVENT,
+	};
     void Log(const char *file, int line, int level, int status, const char *fmt, ...);
     SyinxLog();
     ~SyinxLog();
-
+	static SyinxLog mLog;
 
 private:
     int SYINX_Error_GetCurTime(char* strTime);
     int SYINX_Error_OpenFile(int* pf);
     void SYINX_Error_Core(const char *file, int line, int level, int status, const char *fmt, va_list args);
+	
 };
 
 #endif

@@ -12,31 +12,21 @@ IChannel::IChannel()
 IChannel::~IChannel()
 {
 }
-/*
-@  -用户需要在该初始化函数,作为客户端的初始化工作
-@每当客户端连接服务器的时都会默认调用该函数
-*/
-int IChannel::IChannelTaskInit()
-{
-	std::string _send = "hello world";
-	this->SendAllDataToString(_send);
-	
-	//this->ClientExit();
-}
+
 /*
 @  -用户需要在该任务流程处理函数内写入你所后续规划的其他函数
 @每当客户端发来数据时都会调用该函数
 */
-int IChannel::IChannelTaskProcessing()
+void* IChannelTaskProcessing(void* arg)
 {
-	string Test;
-	this->RecvAllDataToString(Test);
-	cout << Test << endl;
-	
+	auto mIC = (IChannel*)arg;
+	string str;
+	mIC->RecvAllDataToString(str);
+	cout << "str:"<<str << endl;
 }
 int main(int argc, char* argv[])
 {
-	SyinxKernelWork a(8855, argc, argv);
+	SyinxKernelWork a( argc, argv);
 	
 	return a.SyinxKernelExit;
 }
