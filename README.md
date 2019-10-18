@@ -10,18 +10,32 @@
 
 
 
-基于libevent的轻量级适用于游戏的服务器,使用多线程,对不同base事件树进行遍历访问,而不是对单个任务进行线程处理
+基于libevent的轻量级高并发适用于游戏业务的服务器,利用任务队列的线程池模式以及事件队列来对业务进行高并发处理
 
-Libevent-based lightweight is suitable for game servers where multiple threads are used to traverse different base event trees instead of threading individual tasks
+Libevent-based lightweight high concurrency is applicable to the game business server, using the task queue thread pool pattern and event queue to carry out high concurrency processing of the business
 
 > 版本:
 >
-> C/C++:0.1.4
+> C/C++:0.1.8
 >
-> Go:NULL
+> Golang:NULL
 >
-> 
-开发: SiCen Li
+> 开发: SiCen Li
+
+# 前言
+
+​		自己一个人写一个小的游戏框架实在是难,自己测试,自己解决bug,以及新的概念引用学习等问题都会导致开发时间被拉得过于长,我读过一些开源的服务器框架,他们写的都非常棒,比如Zinx C/C++版本,以及Zinx Golang版本(还在学习中),我觉得框架就应该是学习起来简单,使用者调用一些函数就可以完成整个基本功能,而不是基于某个别人写好的开发,那就成了二次开发,或者是自己写的库了
+
+​		我也想把服务器写的跟框架一样,简单,通过函数调用完成大量功能,就比如Golang语言(正在初学中),虽然他的语法我觉得比较怪异,作为C/C++工程师来说就觉得这完全跟我们C/C++反着来,但是其实非常简单,我感觉他的package包真的强大,通过函数调用完成的大量功能,比如
+
+```go
+ con,err :=net.Listen("tcp", "127.0.0.1:8855")
+ con.Accept()
+```
+
+可以省略C/C++几乎50行初始化工作的函数(六部曲 sockaddr_int 初始化 -> socket -> setsockopt->bind ->listen ->accept )
+
+我这不是在打广告,只是说比较简单的调用而已,反正作为个人开发尽量将Syinx写个更强大
 
 # 如何测试(how to test?)
 
@@ -39,26 +53,31 @@ Libevent-based lightweight is suitable for game servers where multiple threads a
 
 `./Syinx  run`             启动并运行框架
 
-`./Syinx -s`                 显示当前每个工作线程的连接数与状态
+`./Syinx -s`                 显示当前服务器的连接数
 
 `./Syinx -v  `                  显示当前Syinx版本
 
 `./Syinx -c/close`     关闭当前框架并释放资源
 
-  
+  如果乱码请用VS打开
 
 # 依赖库(Dependent libraries)
 
 **libevent :安装与访问**
 
 `sudo apt-get install libevent`
+
 `https://github.com/libevent/libevent`
 
 **pthread:安装与访问**
 
 `sudo apt-get install glibc-doc`
+
 `sudo apt-get install manpages-posix-dev`
+
 `https://computing.llnl.gov/tutorials/pthreads/`
+
+
 
 
 
@@ -66,9 +85,21 @@ Libevent-based lightweight is suitable for game servers where multiple threads a
 
 ![1570001828106](https://github.com/OnlyloveSY/Syinx/blob/master/screenshots/b1b193957bd55749b99d03b77b8f8f7f.png)
 
-​        通过配置文件读取用户设置的服务器基础参数以及当前主要工作线程数量来进行初始化，并为框架设定好回调函数，以4主要线程为例，当有客户端连接服务器时，触发listener回调函数，返回客户端的文件描述符（Socketfd），此时委托resource adapter类的初始化客户端的bufferevent读事件回调函数，写事件回调函数，错误事件回调函数，并且对后续业务设定一个ichannel通道层，此时Socketfd会被添加到resource adapter的map容器，并且在此之前会根据不同的要求添加到不同的base事件树上
+###     一: 简介
 
-​		框架初始化时就已经为每一个线程的工作函数设定为遍历base事件树，线程只独享自己的base，之间并不共享，当有可读事件触发时，事件树返回触发事件的bufferevent，并且调用相应的回调函数，将数据保存到通道层，根据不同的游戏业务，客户可以对通道层做后续开发。
+   常见的适用于游戏的服务器,采用libevent作为开发源, 采用线程池任务队列进行操作,客户端连接服务器后,文件描述被epoll所监听,当有IO事件时,才会将事件函数加入到任务队列,然后被线程所调用
+
+
+
+### 	二: 事件队列概念(事件轮询)
+
+​	![1570001828106](https://github.com/OnlyloveSY/Syinx/blob/master/screenshots/b1b193957bd55749b99d03b77b8f8f7f.png)
+
+​	时间触发的事件任务以及周期触发事件均可以被设置,这也是大部分网络游戏在使用的一个固定频率任务处理的游戏事件轮询机制
+
+​	每一个轮子即节点, 都会绑定一个queue或者是list, 你可以将某个你想要指定时间触发,或者是固定时间周期触发的任务挂在某个节点的queue或者list上,每次轮询时候都会来检测并且做相应处理,该完成什么样的任务将由你来决定
+
+### 	三: 常见的游戏数据流协议
 
 ​		游戏业务流程建议为 -->IO框架层   ->  通道层  ->协议层  ->  业务层  ->  逻辑处理层 (可有可无)		
 
@@ -77,6 +108,28 @@ Libevent-based lightweight is suitable for game servers where multiple threads a
 ​		发送接收数据保存的格式:TLV格式
 
 ![1570166126792](https://github.com/OnlyloveSY/Syinx/blob/master/screenshots/2dc6b61a242fae4d85c08743314afc98.png)
+
+
+
+### 	 四: 如何修改配置文件
+
+#设置当前的绑定的IP,如果你设置0.0.0.0,则会默认绑定你当前的所有ip地址
+`Host:0.0.0.0`
+
+#设置你当前的绑定的端口号,默认端口号为8855,你可以修改为其他端口
+`Port:8855`
+
+#设置线程池容量
+`SetPthNum:4`
+
+#设置当前任务队列最大队列数
+`SetTaskMax:200`
+
+#设置计时器的周期循环时间,单位为seconds
+`SetTimeinterval:1`
+
+#设置计数器的第一次延迟事件,单位为seconds
+`SetTimevalue:1`
 
 
 
@@ -102,31 +155,39 @@ int main()
 
 ```c++
 
-//用户可以指定该构造函数需要初始化或者用来创建哪些东西  当有新的客户端连接时会调用该默认构造
+#include "Syinx.h"
+#include "SyTaskAdapter.h"
+
+#include <iostream>
+using namespace std;
+
+//用户可以指定该构造函数需要初始化或者用来创建哪些东西
 IChannel::IChannel()
 {
 }
-//用户可以指定该析构构造函数需要释放哪些东西  当客户端退出时会调用该析构
+//用户可以指定该析构构造函数需要释放哪些东西
 IChannel::~IChannel()
 {
 }
-/*
-@  -用户需要在该初始化函数,作为客户端的初始化工作  可写可无
-@调用时机:主动  每当客户端连接服务器的时都会默认调用该函数
-*/
-int IChannel::IChannelTaskInit()
-{
 
-}
 /*
 @  -用户需要在该任务流程处理函数内写入你所后续规划的其他函数
-@调用时机:被动 每当客户端发来数据时都会调用该函数
+@每当客户端发来数据时都会调用该函数
 */
-int IChannel::IChannelTaskProcessing()
+void* IChannelTaskProcessing(void* arg)
 {
-
-	
+	auto mIC = (IChannel*)arg;
+	string str;
+	mIC->RecvAllDataToString(str);
+	cout << "str:"<<str << endl;
 }
+int main(int argc, char* argv[])
+{
+	SyinxKernelWork a( argc, argv);
+	
+	return a.SyinxKernelExit;
+}
+
 ```
 
 
@@ -238,3 +299,26 @@ Syzinx -dev 0.1.5
 ​			--多线程基于数据库安全问题(未完成)
 
 ​			--错误日志输出(未完成)
+
+
+
+Syzinx -dev 0.1.8   该版本已经能够被使用或者用来学习
+
+​			大量的代码被重置,删除了不必要的元素
+
+​    		不在为服务器分成多个epoll树
+
+​			添加线程池
+
+​			添加log文件,一切的log日志信息在log文件夹下查看`./log/Syderlog.log`
+
+​			添加读写配置文件
+
+​			--后续将为计时器事件队列
+
+​		
+
+
+
+
+
