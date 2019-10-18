@@ -83,7 +83,7 @@ Libevent-based lightweight high concurrency is applicable to the game business s
 
 # 概述(overview)
 
-![1570001828106](https://github.com/OnlyloveSY/ResPic/blob/master/screenshots/b1b193957bd55749b99d03b77b8f8f7f.png)
+![1570001828106](https://github.com/OnlyloveSY/ResPic/blob/master/screenshots/Syinx2.png)
 
 ###     一: 简介
 
@@ -93,7 +93,7 @@ Libevent-based lightweight high concurrency is applicable to the game business s
 
 ### 	二: 事件队列概念(事件轮询)
 
-​	![1570001828106](https://github.com/OnlyloveSY/Syinx/blob/master/screenshots/b1b193957bd55749b99d03b77b8f8f7f.png)
+​	![1570001828106](https://github.com/OnlyloveSY/ResPic/blob/master/screenshots/Event_queue.png)
 
 ​	时间触发的事件任务以及周期触发事件均可以被设置,这也是大部分网络游戏在使用的一个固定频率任务处理的游戏事件轮询机制
 
