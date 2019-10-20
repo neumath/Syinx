@@ -75,7 +75,7 @@ void* SyPthreadPool_thread(void* dst)
 
 	char _buf[BUFSIZ] = { 0 };
 	sprintf(_buf, "Pthread EVENT: %ld is Start!", pthread_self());
-	SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::EVENT, 1, _buf);
+	SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::INFO, 1, _buf);
 
 	while (1)
 	{
@@ -116,7 +116,7 @@ void* SyPthreadPool_thread(void* dst)
 
 
 	}
-	sprintf(_buf, "Pthread %s: %ld is Exit!", "LogEvent_Error",pthread_self());
+	sprintf(_buf, "Pthread %s: %ld is Exit!", "LogEvent_Error", pthread_self());
 	SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, 1, _buf);
 
 	cout << "pth exit" << endl;
@@ -177,7 +177,7 @@ threadpool_t* SyinxPthreadPool::threadpool_create(int thread_count, int queue_si
 		int iRet = pthread_create(&PthPool->threads[i], &Pthattr, SyPthreadPool_thread, (void*)PthPool);
 		if (iRet != 0)
 		{
-			
+
 			SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, iRet, "pthread_create is failed");
 			return NULL;
 		}
@@ -287,5 +287,3 @@ int SyPthreadPool_free(threadpool_t* pool)
 	delete pool;
 
 }
-
-

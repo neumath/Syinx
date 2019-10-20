@@ -4,29 +4,29 @@
 #include <iostream>
 using namespace std;
 
-//ÓÃ»§¿ÉÒÔÖ¸¶¨¸Ã¹¹Ôìº¯ÊýÐèÒª³õÊ¼»¯»òÕßÓÃÀ´´´½¨ÄÄÐ©¶«Î÷
+//ç”¨æˆ·å¯ä»¥æŒ‡å®šè¯¥æž„é€ å‡½æ•°éœ€è¦åˆå§‹åŒ–æˆ–è€…ç”¨æ¥åˆ›å»ºå“ªäº›ä¸œè¥¿
 IChannel::IChannel()
 {
 }
-//ÓÃ»§¿ÉÒÔÖ¸¶¨¸ÃÎö¹¹¹¹Ôìº¯ÊýÐèÒªÊÍ·ÅÄÄÐ©¶«Î÷
+//ç”¨æˆ·å¯ä»¥æŒ‡å®šè¯¥æžæž„æž„é€ å‡½æ•°éœ€è¦é‡Šæ”¾å“ªäº›ä¸œè¥¿
 IChannel::~IChannel()
 {
 }
 
 /*
-@  -ÓÃ»§ÐèÒªÔÚ¸ÃÈÎÎñÁ÷³Ì´¦Àíº¯ÊýÄÚÐ´ÈëÄãËùºóÐø¹æ»®µÄÆäËûº¯Êý
-@Ã¿µ±¿Í»§¶Ë·¢À´Êý¾ÝÊ±¶¼»áµ÷ÓÃ¸Ãº¯Êý
+@  -ç”¨æˆ·éœ€è¦åœ¨è¯¥ä»»åŠ¡æµç¨‹å¤„ç†å‡½æ•°å†…å†™å…¥ä½ æ‰€åŽç»­è§„åˆ’çš„å…¶ä»–å‡½æ•°
+@æ¯å½“å®¢æˆ·ç«¯å‘æ¥æ•°æ®æ—¶éƒ½ä¼šè°ƒç”¨è¯¥å‡½æ•°
 */
 void* IChannelTaskProcessing(void* arg)
 {
 	auto mIC = (IChannel*)arg;
 	string str;
 	mIC->RecvAllDataToString(str);
-	cout << "str:"<<str << endl;
+	cout << "str:" << str << endl;
 }
 int main(int argc, char* argv[])
 {
-	SyinxKernelWork a( argc, argv);
-	
+	SyinxKernelWork a(argc, argv);
+
 	return a.SyinxKernelExit;
 }

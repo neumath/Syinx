@@ -1,32 +1,32 @@
-#include "SyAdapter.h"
+ï»¿#include "SyAdapter.h"
 
 #ifndef _SYTASKADAPTER_H_
 #define _SYTASKADAPTER_H_
 class SyinxAdapterResource;
 struct IChannelMsg
 {
-	
-	int             Socket;                  /*±£´æÌ×½Ó×Ö*/
-	bufferevent*    buffer;                  /*±£´æbuffer*/
 
-	int             ClientID;                /*¿Í»§¶ËÎ¨Ò»id*/
-    
+	int             Socket;                  /*ä¿å­˜å¥—æ¥å­—*/
+	bufferevent* buffer;                  /*ä¿å­˜buffer*/
+
+	int             ClientID;                /*å®¢æˆ·ç«¯å”¯ä¸€id*/
+
 };
-//ÈÎÎñ´¦ÀíÀà
+//ä»»åŠ¡å¤„ç†ç±»
 class SyinxAdapterMission : public SyinxAdapter
 {
 public:
 	SyinxAdapterMission() {}
 	virtual ~SyinxAdapterMission() {}
 public:
-	
-	//ÁôºÃ½ÓÊÕÊı¾İµÄ¿Ó
+
+	//ç•™å¥½æ¥æ”¶æ•°æ®çš„å‘
 	virtual void RecvData() { return; }
 	virtual void SendData() { return; }
 
 };
 
-//´´½¨Í¨µÀ²ã¹¤³§ÀàÓÃÓÚÒ»ÏµÁĞ³õÊ¼»¯
+//åˆ›å»ºé€šé“å±‚å·¥å‚ç±»ç”¨äºä¸€ç³»åˆ—åˆå§‹åŒ–
 class IChannelFactory
 {
 public:
@@ -34,8 +34,8 @@ public:
 	~IChannelFactory() {}
 };
 
-//Í¨µÀ²ãÊı¾İÁ÷¶ÔÓ¦»º´æ
-struct StringByte 
+//é€šé“å±‚æ•°æ®æµå¯¹åº”ç¼“å­˜
+struct StringByte
 {
 	std::string _InStr;
 	int _InSize;
@@ -47,73 +47,73 @@ class IChannel : public SyinxAdapterMission
 public:
 	IChannel();
 	virtual ~IChannel();
-	//¶ÁÈ¡Ò»ÌõÊı¾İ·ÅÖÃµ½string---ÒÑ·ÏÆú
+	//è¯»å–ä¸€æ¡æ•°æ®æ”¾ç½®åˆ°string---å·²åºŸå¼ƒ
 	virtual void RecvData() override;
-	//·¢ËÍÒ»ÌõÊı¾İ---------------ÒÑ·ÏÆú
+	//å‘é€ä¸€æ¡æ•°æ®---------------å·²åºŸå¼ƒ
 	virtual void SendData() override;
 public:
-	
-	/*
-	@   -¶ÁÈ¡µ±Ç°È«²¿Êı¾İÊı¾İµ½string
-	@arg:²»ÒÔÈÎºÎĞ­Òé¸ñÊ½½«È«²¿Êı¾İ¶ÁÈ¡string²¢Çå¿ÕÕ¼´æÇø
-	@³É¹¦·µ»Ø¶ÁÈ¡µ½µÄÊı¾İ³¤¶È,Ê§°Ü·µ»Ø-1 
-	*/
-	int RecvAllDataToString(std::string &arg);
 
 	/*
-	@   -ÒÔĞ­ÒéµÄ¸ñÊ½½ÓÊÕÊı¾İµ½string   len  type  values
-	@arg:ÒÔÈÎºÎĞ­Òé¸ñÊ½½«valuesµÄÊı¾İ¶ÁÈ¡string²¢Çå¿ÕÕ¼´æÇø
-	@OutLen:³É¹¦¶ÁÈ¡µ½µÄÊı¾İµÄ³¤¶È
-	@Type:³É¹¦¶ÁÈ¡µ½µÄÊı¾İÀàĞÍ
-	@str:³É¹¦¶ÁÈ¡µ½µÄÊı¾İ
-	@³É¹¦½«·µ»Ø1ÇÒ´ËÊ±ËµÃ÷ÈÔÈ»ÓĞÊı¾İ¿É¶Á
-	@·µ»Ø0Ê±ËµÃ÷ÎŞÊ£ÓàÊı¾İ¿É¶Á
-	@Ê§°Ü·µ»Ø-1
+	@   -è¯»å–å½“å‰å…¨éƒ¨æ•°æ®æ•°æ®åˆ°string
+	@arg:ä¸ä»¥ä»»ä½•åè®®æ ¼å¼å°†å…¨éƒ¨æ•°æ®è¯»å–stringå¹¶æ¸…ç©ºå å­˜åŒº
+	@æˆåŠŸè¿”å›è¯»å–åˆ°çš„æ•°æ®é•¿åº¦,å¤±è´¥è¿”å›-1
+	*/
+	int RecvAllDataToString(std::string& arg);
+
+	/*
+	@   -ä»¥åè®®çš„æ ¼å¼æ¥æ”¶æ•°æ®åˆ°string   len  type  values
+	@arg:ä»¥ä»»ä½•åè®®æ ¼å¼å°†valuesçš„æ•°æ®è¯»å–stringå¹¶æ¸…ç©ºå å­˜åŒº
+	@OutLen:æˆåŠŸè¯»å–åˆ°çš„æ•°æ®çš„é•¿åº¦
+	@Type:æˆåŠŸè¯»å–åˆ°çš„æ•°æ®ç±»å‹
+	@str:æˆåŠŸè¯»å–åˆ°çš„æ•°æ®
+	@æˆåŠŸå°†è¿”å›1ä¸”æ­¤æ—¶è¯´æ˜ä»ç„¶æœ‰æ•°æ®å¯è¯»
+	@è¿”å›0æ—¶è¯´æ˜æ— å‰©ä½™æ•°æ®å¯è¯»
+	@å¤±è´¥è¿”å›-1
 	*/
 	int RecvValuesToString(unsigned int* _OutLen, unsigned int* _OutType, std::string& _OutStr);
 
 
 	/*
-	@   -Ö±½Ó·¢ËÍµ±Ç°stringµ½¸Ã¿Í»§¶Ë
-	@instr:Ö±½Ó½«µ±Ç°×Ö·û´®·¢ËÍµ½µ±Ç°¿Í»§¶Ë
-	@³É¹¦·µ»Ø·¢ËÍµÄÊı¾İ³¤¶È,Ê§°Ü·µ»Ø-1
+	@   -ç›´æ¥å‘é€å½“å‰stringåˆ°è¯¥å®¢æˆ·ç«¯
+	@instr:ç›´æ¥å°†å½“å‰å­—ç¬¦ä¸²å‘é€åˆ°å½“å‰å®¢æˆ·ç«¯
+	@æˆåŠŸè¿”å›å‘é€çš„æ•°æ®é•¿åº¦,å¤±è´¥è¿”å›-1
 	*/
-	int SendAllDataToString(std::string &_InStr);
+	int SendAllDataToString(std::string& _InStr);
 
 	/*
-	@   -°´Ğ­Òé¸ñÊ½×ª»»ÕıAsn.1µÄstringÊı¾İ°ü²¢·¢ËÍ ( len  type  values)
-	@Inlen:·¢ËÍÊı¾İ°üµÄ³¤¶È
-	@InType:·¢ËÍÊı¾İ±¨µÄÀàĞÍ(×ÔĞĞÖ¸¶¨¿ÉÓĞ¿ÉÎŞ)
-	@InStr:ĞèÒª·¢ËÍµÄÊı¾İ±¨
-	@³É¹¦·µ»Ø·¢ËÍÊı¾İ°üµÄ³¤¶È,Ê§°Ü·µ»Ø-1
+	@   -æŒ‰åè®®æ ¼å¼è½¬æ¢æ­£Asn.1çš„stringæ•°æ®åŒ…å¹¶å‘é€ ( len  type  values)
+	@Inlen:å‘é€æ•°æ®åŒ…çš„é•¿åº¦
+	@InType:å‘é€æ•°æ®æŠ¥çš„ç±»å‹(è‡ªè¡ŒæŒ‡å®šå¯æœ‰å¯æ— )
+	@InStr:éœ€è¦å‘é€çš„æ•°æ®æŠ¥
+	@æˆåŠŸè¿”å›å‘é€æ•°æ®åŒ…çš„é•¿åº¦,å¤±è´¥è¿”å›-1
 	*/
 	int SendValuesToString(unsigned int _InLen, unsigned int _InType, std::string& _InStr);
 
 
-	//±£´æÏÂÒ»¸ö¹¤×÷½ÚµãµÄÖ¸Õë
+	//ä¿å­˜ä¸‹ä¸€ä¸ªå·¥ä½œèŠ‚ç‚¹çš„æŒ‡é’ˆ
 	void* _NextNode;
 
-	/*mysql´¦Àíº¯Êı*/
+	/*mysqlå¤„ç†å‡½æ•°*/
 #ifdef SYINXMOD_ADD_MYSQL
 
 #endif 
 
-	//Êı¾İ»º´æ½á¹¹Ìå
+	//æ•°æ®ç¼“å­˜ç»“æ„ä½“
 	StringByte* StrByte;
 
-	//±£´æÍ¨µÀ²ãµÄÊôĞÔ
+	//ä¿å­˜é€šé“å±‚çš„å±æ€§
 	IChannelMsg* mICMsg;
 private:
-	//³õÊ¼»¯Í¨µÀ²ã
+	//åˆå§‹åŒ–é€šé“å±‚
 	int ICannel_Init(IChannelMsg* Info);
-	//Ïú»ÙÍ¨µÀ²ã
+	//é”€æ¯é€šé“å±‚
 	void IChannel_free();
 
-	//½«¶ÁÈ¡µ½µÄÊı¾İ·Åµ½»º´æÇø
+	//å°†è¯»å–åˆ°çš„æ•°æ®æ”¾åˆ°ç¼“å­˜åŒº
 	int DatatoInStrByte(char* buf);
 
-	
-private://°ó¶¨×ÊÔ´¹ÜÀíÆ÷
+
+private://ç»‘å®šèµ„æºç®¡ç†å™¨
 	SyinxAdapterResource* mICnSaveRes;
 };
 

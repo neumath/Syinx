@@ -1,12 +1,12 @@
-#ifndef _SYPTH_H_
+ï»¿#ifndef _SYPTH_H_
 #define _SYPTH_H_
 #include "SyLog.h"
 
 /*
-class SyinxAdapter -> class SyinxAdapterPth              Ïß³ÌÊÊÅäÆ÷
-class SyinxAdapter -> class SyinxAdapterMission		   ÈÎÎñÊÊÅäÆ÷
-class SyinxAdapterMission -> class IChannel            Í¨µÀ²ãÓÃÓÚ½ÓÊÕ¿Í»§¶Ë·¢À´µÄÊý¾Ý
-class IChannelFactory /                                 ÓÃÓÚ³õÊ¼»¯»¯Ò»ÏµÁÐÊý¾Ý
+class SyinxAdapter -> class SyinxAdapterPth              çº¿ç¨‹é€‚é…å™¨
+class SyinxAdapter -> class SyinxAdapterMission		   ä»»åŠ¡é€‚é…å™¨
+class SyinxAdapterMission -> class IChannel            é€šé“å±‚ç”¨äºŽæŽ¥æ”¶å®¢æˆ·ç«¯å‘æ¥çš„æ•°æ®
+class IChannelFactory /                                 ç”¨äºŽåˆå§‹åŒ–åŒ–ä¸€ç³»åˆ—æ•°æ®
 
 */
 class SyinxLog;

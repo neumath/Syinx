@@ -1,4 +1,4 @@
-#include <unistd.h>
+ï»¿#include <unistd.h>
 #include <vector>
 #include <map>
 #include <iostream>
@@ -12,7 +12,7 @@
 #include "SyPthreadAdapter.h"
 SyinxAdapterPth::SyinxAdapterPth()
 {
-	
+
 }
 
 SyinxAdapterPth::~SyinxAdapterPth()
@@ -22,7 +22,7 @@ SyinxAdapterPth::~SyinxAdapterPth()
 
 
 
-/*-----------------------------´ÎÒªÏß³Ìº¯Êý----------------------------*/
+/*-----------------------------æ¬¡è¦çº¿ç¨‹å‡½æ•°----------------------------*/
 
 int SyinxAdapterPth::SyinxAdapterPth_Init()
 {
@@ -30,6 +30,10 @@ int SyinxAdapterPth::SyinxAdapterPth_Init()
 	if (this->mSyinxPthPool == NULL)
 	{
 		return -1;
+	}
+	else
+	{
+		return 1;
 	}
 }
 
@@ -44,5 +48,3 @@ int SyinxAdapterPth::SyinxAdapter_Pth_destroy()
 {
 	return SyinxPthreadPool::threadpool_destroy(this->mSyinxPthPool, 0);
 }
-
-

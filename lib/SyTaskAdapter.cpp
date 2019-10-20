@@ -1,4 +1,4 @@
-#include <iostream>
+ï»¿#include <iostream>
 #include <cstring>
 #include <map>
 #include <event2/event.h>
@@ -22,7 +22,7 @@ void IChannel::SendData()
 {
 }
 
-int IChannel::RecvAllDataToString(std::string &arg)
+int IChannel::RecvAllDataToString(std::string& arg)
 {
 	if (this->StrByte->_InStr.size() <= 0 || this->StrByte->_InStr.size() != StrByte->_InSize)
 	{
@@ -37,7 +37,7 @@ int IChannel::RecvAllDataToString(std::string &arg)
 	return _Size;
 }
 
-//°´Ð­Òé¶ÁÈ¡
+//æŒ‰åè®®è¯»å–
 int IChannel::RecvValuesToString(unsigned int* _OutLen, unsigned int* _OutType, std::string& _OutStr)
 {
 	if (this->StrByte->_InStr.size() >= 8)
@@ -63,7 +63,7 @@ int IChannel::RecvValuesToString(unsigned int* _OutLen, unsigned int* _OutType, 
 			if (this->StrByte->_InStr.size() >= 8)
 				return 8 + ValuesLen;
 		}
-		else 
+		else
 		{
 			/*do nothing*/;
 		}
@@ -76,10 +76,10 @@ int IChannel::RecvValuesToString(unsigned int* _OutLen, unsigned int* _OutType, 
 	{
 		return -1;
 	}
-	
+
 }
 
-int IChannel::SendAllDataToString(std::string &_InStr)
+int IChannel::SendAllDataToString(std::string& _InStr)
 {
 	auto buffer = this->mICMsg->buffer;
 	char* buf = const_cast<char*>(_InStr.c_str());
@@ -114,7 +114,7 @@ int IChannel::SendValuesToString(unsigned int _InLen, unsigned int _InType, std:
 		_SendStr.push_back((_InType >> 8) & 0xff);
 		_SendStr.push_back((_InType >> 16) & 0xff);
 		_SendStr.push_back((_InType >> 24) & 0xff);
-		
+
 		_SendStr.append(_InStr);
 		char* _buf = const_cast<char*>(_SendStr.c_str());
 		if (strlen(_buf) == _InStr.size())
@@ -170,7 +170,3 @@ int IChannel::DatatoInStrByte(char* buf)
 	this->StrByte->_InStr = buf;
 	return 0;
 }
-
-
-
-

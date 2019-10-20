@@ -1,19 +1,19 @@
 #ifndef __THREADPOOL_H_
 #define __THREADPOOL_H_
 
-/*Ö÷ÒªÏß³Ìºê*/
-//Ö÷Ïß³Ì
+/*ä¸»è¦çº¿ç¨‹å®*/
+//ä¸»çº¿ç¨‹
 #define PRINCIPAL_PTHREAD                                public
-//´ÎÒªÏß³Ì
+//æ¬¡è¦çº¿ç¨‹
 #define MINOR_PTHREAD                                    public
 
-/*ÉèÖÃÏß³Ì»Øµ÷º¯Êı·½°¸*/
+/*è®¾ç½®çº¿ç¨‹å›è°ƒå‡½æ•°æ–¹æ¡ˆ*/
 //set flags call_back func is equall
 #define SET_PTHPOOLCB_EQUALL                                 0x01
 //set flags call_back func is unlike
 #define SET_PTHPOLLCB_UNLIKE                                 0x02
 
-/*Ïß³Ì¹¤×÷×´Ì¬µÄºê*/
+/*çº¿ç¨‹å·¥ä½œçŠ¶æ€çš„å®*/
 class SyinxKernel;
 class SyinxLog;
 struct threadpool_t;
@@ -23,7 +23,7 @@ struct Principal_Pth;
 enum SyPthreadPoolErr
 {
 	Success = 1,
-	//ËøÊ§°Ü
+	//é”å¤±è´¥
 	MutexInitErr,
 	CondInitErr,
 	LockErr,
@@ -32,36 +32,36 @@ enum SyPthreadPoolErr
 	CondSignalErr,
 
 	DeleteErr,
-	DistoryErr,             /*ÊÍ·ÅÊ§°Ü*/
-	VarIsNULL,              /*´«µİ±äÁ¿Îª¿Õ*/
-	QueueIsMax,        /*ÈÎÎñ¶ÓÁĞÂúÁË*/
+	DistoryErr,             /*é‡Šæ”¾å¤±è´¥*/
+	VarIsNULL,              /*ä¼ é€’å˜é‡ä¸ºç©º*/
+	QueueIsMax,        /*ä»»åŠ¡é˜Ÿåˆ—æ»¡äº†*/
 
-	Shutdown = 404,         /*¹Ø±Õ*/
+	Shutdown = 404,         /*å…³é—­*/
 
 };
 
-//ÈÎÎñ¶ÓÁĞ»Øµ÷º¯Êı¼°Æä²ÎÊı
+//ä»»åŠ¡é˜Ÿåˆ—å›è°ƒå‡½æ•°åŠå…¶å‚æ•°
 typedef struct {
 	void* (*startfunc)(void*);
 	void* arg;
 } SyPthreadPool_task_t;
 
 struct threadpool_t {
-	pthread_mutex_t                     Pthlock;    /*ÓÃÓÚÄÚ²¿¹¤×÷µÄ»¥³âËø*/
-	pthread_cond_t                      Pthcond;    /*Ïß³Ì¼äÍ¨ÖªµÄÌõ¼ş±äÁ¿*/
-	pthread_t* threads;                             /*Ïß³ÌÊı×é£¬ÕâÀïÓÃÖ¸ÕëÀ´±íÊ¾*/
+	pthread_mutex_t                     Pthlock;    /*ç”¨äºå†…éƒ¨å·¥ä½œçš„äº’æ–¥é”*/
+	pthread_cond_t                      Pthcond;    /*çº¿ç¨‹é—´é€šçŸ¥çš„æ¡ä»¶å˜é‡*/
+	pthread_t* threads;                             /*çº¿ç¨‹æ•°ç»„ï¼Œè¿™é‡Œç”¨æŒ‡é’ˆæ¥è¡¨ç¤º*/
 
-	SyPthreadPool_task_t* Taskqueue;                /*´æ´¢ÈÎÎñµÄÊı×é£¬¼´ÈÎÎñ¶ÓÁĞ*/
-	int queue_size;                                 /*ÈÎÎñ¶ÓÁĞ×î´óÊıÁ¿*/
-	int count;                                      /*µ±Ç°ÈÎÎñÊıÁ¿*/
-	int HeadIndex;                                  /*ÈÎÎñ¶ÓÁĞÍ·*/
-	int TailIndex;                                  /*ÈÎÎñ¶ÓÁĞÎ²*/
+	SyPthreadPool_task_t* Taskqueue;                /*å­˜å‚¨ä»»åŠ¡çš„æ•°ç»„ï¼Œå³ä»»åŠ¡é˜Ÿåˆ—*/
+	int queue_size;                                 /*ä»»åŠ¡é˜Ÿåˆ—æœ€å¤§æ•°é‡*/
+	int count;                                      /*å½“å‰ä»»åŠ¡æ•°é‡*/
+	int HeadIndex;                                  /*ä»»åŠ¡é˜Ÿåˆ—å¤´*/
+	int TailIndex;                                  /*ä»»åŠ¡é˜Ÿåˆ—å°¾*/
 
 
-	int thread_count;                               /*Ïß³ÌÊıÁ¿*/
+	int thread_count;                               /*çº¿ç¨‹æ•°é‡*/
 
-	bool shutdown;                                   /*±êÊ¶Ïß³Ì³ØÊÇ·ñ¹Ø±Õ*/
-	int  started;                                    /*¿ªÆôµÄÏß³ÌÊı*/
+	bool shutdown;                                   /*æ ‡è¯†çº¿ç¨‹æ± æ˜¯å¦å…³é—­*/
+	int  started;                                    /*å¼€å¯çš„çº¿ç¨‹æ•°*/
 };
 
 
@@ -69,7 +69,7 @@ class SyinxPthreadPool
 {
 	enum PrincipalPthWorkStatus
 	{
-		PriPthWork=1,
+		PriPthWork = 1,
 		PriPthWait,
 		PRiPthClose,
 		PriPthOther,
@@ -78,36 +78,36 @@ public:
 	SyinxPthreadPool();
 	~SyinxPthreadPool();
 
-	//Ïß³Ì³Øº¯Êı
+	//çº¿ç¨‹æ± å‡½æ•°
 	/*
 	@function threadpool_create
-	 ´´½¨Ò»¸öthreadpool_t¶ÔÏó¡£
-	 @param thread_countÎªÏß³Ì³ØµÄÈİÁ¿,Ïß³ÌÊıÁ¿
-	 @param queue_size¶ÓÁĞ×î´óÊıÁ¿
-	 @param flagsÎªÕ¼Î»²ÎÊı,´ıºóĞøÊ¹ÓÃ¡£
-	 @·µ»ØÒ»¸öĞÂ´´½¨µÄÏß³Ì³Ø»òNULL
-	Ê§°Ü·µ»ØNULL
-	³É¹¦·µ»ØÏß³Ì³Ø½á¹¹Ìå
+	 åˆ›å»ºä¸€ä¸ªthreadpool_tå¯¹è±¡ã€‚
+	 @param thread_countä¸ºçº¿ç¨‹æ± çš„å®¹é‡,çº¿ç¨‹æ•°é‡
+	 @param queue_sizeé˜Ÿåˆ—æœ€å¤§æ•°é‡
+	 @param flagsä¸ºå ä½å‚æ•°,å¾…åç»­ä½¿ç”¨ã€‚
+	 @è¿”å›ä¸€ä¸ªæ–°åˆ›å»ºçš„çº¿ç¨‹æ± æˆ–NULL
+	å¤±è´¥è¿”å›NULL
+	æˆåŠŸè¿”å›çº¿ç¨‹æ± ç»“æ„ä½“
 	*/
 	static threadpool_t* threadpool_create(int thread_count, int queue_size, int flags);
 
 	/*
 	@function threadpool_add
-	 ½«º¯ÊıÒÔ¼°²ÎÊıÌí¼Óµ½ÈÎÎñ¶ÓÁĞ
-	 @param poolÎªÏÈÏß³Ì³ØµØÖ·
-	 @param void* (*callback)(void*)Îª»Øµ÷º¯Êı
-	 @param arg´«Èë²ÎÊı
-	 @param flagsÎªÕ¼Î»²ÎÊı,´ıºóĞøÊ¹ÓÃ¡£
-	Ê§°Ü·µ»ØSyPthreadPoolErrÃ¶¾Ù
-	³É¹¦·µ»ØSuccess
+	 å°†å‡½æ•°ä»¥åŠå‚æ•°æ·»åŠ åˆ°ä»»åŠ¡é˜Ÿåˆ—
+	 @param poolä¸ºå…ˆçº¿ç¨‹æ± åœ°å€
+	 @param void* (*callback)(void*)ä¸ºå›è°ƒå‡½æ•°
+	 @param argä¼ å…¥å‚æ•°
+	 @param flagsä¸ºå ä½å‚æ•°,å¾…åç»­ä½¿ç”¨ã€‚
+	å¤±è´¥è¿”å›SyPthreadPoolErræšä¸¾
+	æˆåŠŸè¿”å›Success
 	*/
 	static	int threadpool_add(threadpool_t* pool, void* (*callback)(void*), void* arg, int flags);
 
 	/*
 	@function threadpool_destroy
-	 Ïú»ÙpoolÏß³Ì³Ø
-	Ê§°Ü·µ»ØSyPthreadPoolErrÃ¶¾Ù
-	³É¹¦·µ»ØSuccess
+	 é”€æ¯poolçº¿ç¨‹æ± 
+	å¤±è´¥è¿”å›SyPthreadPoolErræšä¸¾
+	æˆåŠŸè¿”å›Success
 	*/
 	static  int threadpool_destroy(threadpool_t* pool, int flags);
 

@@ -1,4 +1,4 @@
-#include "SyAdapter.h"
+﻿#include "SyAdapter.h"
 SyinxAdapter::SyinxAdapter()
 {
 }

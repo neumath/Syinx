@@ -4,6 +4,7 @@
 #include "SyTaskAdapter.h"
 #include "SyPthreadPool.h"
 #include "SyResAdapter.h"
+#include "SyMysqlConPool.h"
 #include "SyConfig.h"
 #include <sys/shm.h>
 #include <sys/ipc.h>
@@ -20,36 +21,36 @@ using namespace std;
 
 SyinxKernel* SyinxKernel::mSyinx = nullptr;
 
-//ÉèÖÃÄ¬ÈÏÎªÁã
+//è®¾ç½®é»˜è®¤ä¸ºé›¶
 int SyinxKernel::SyDatabaseMod = 0;
 
 const char* LogEvent_Event = "EVENT !";
 const char* LogEvent_Warning = "WARNING !";
 const char* LogEvent_Error = "ERROR !";
 
-//listen»Øµ÷º¯Êý´«ÈëµÄ²ÎÊý
+//listenå›žè°ƒå‡½æ•°ä¼ å…¥çš„å‚æ•°
 struct  SyinxDeliver
 {
 
-	//base¾ä±ú
+	//baseå¥æŸ„
 	struct event_base* iSyinxBase;
 
-	//±£´æÓÃÓÚ¼àÌýÌ×½Ó×ÖµÄevconnlistener
+	//ä¿å­˜ç”¨äºŽç›‘å¬å¥—æŽ¥å­—çš„evconnlistener
 	struct evconnlistener* iSyinxListen;
 
-	//ºËÐÄ¿ò¼ÜµØÖ·
+	//æ ¸å¿ƒæ¡†æž¶åœ°å€
 	SyinxKernel* iSyinx;
 };
 
 SyinxKernel::SyinxKernel()
 {
-	
+
 }
 SyinxKernel::~SyinxKernel()
 {
 }
 
-//¶Á³ö»Øµ÷
+//è¯»å‡ºå›žè°ƒ
 void SyinxKernel_Recv_Cb(struct bufferevent* bev, void* ctx)
 {
 	auto mIC = (IChannel*)ctx;
@@ -73,89 +74,89 @@ void SyinxKernel_Recv_Cb(struct bufferevent* bev, void* ctx)
 	{
 		switch (RetErr)
 		{
-			case Success:
-			{
-				break;
-			}
-			case MutexInitErr:
-			{
-				SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, MutexInitErr, "SyinxAdapter_Pth_Add MutexInitErr");
-				break;
-			}
-			case CondInitErr:
-			{
-				SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, CondInitErr, "SyinxAdapter_Pth_Add CondInitErr");
-				break;
-			}
+		case Success:
+		{
+			break;
+		}
+		case MutexInitErr:
+		{
+			SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, MutexInitErr, "SyinxAdapter_Pth_Add MutexInitErr");
+			break;
+		}
+		case CondInitErr:
+		{
+			SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, CondInitErr, "SyinxAdapter_Pth_Add CondInitErr");
+			break;
+		}
 
-			case LockErr:
-			{
-				SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, LockErr, "SyinxAdapter_Pth_Add LockErr");
-				break;
-			}
-			case UnLockErr:
-			{
-				SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, UnLockErr, "SyinxAdapter_Pth_Add UnLockErr");
-				break;
-			}
+		case LockErr:
+		{
+			SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, LockErr, "SyinxAdapter_Pth_Add LockErr");
+			break;
+		}
+		case UnLockErr:
+		{
+			SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, UnLockErr, "SyinxAdapter_Pth_Add UnLockErr");
+			break;
+		}
 
-			case CondWaitErr:
-			{
-				SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, CondWaitErr, "SyinxAdapter_Pth_Add CondWaitErr");
-				break;
-			}
+		case CondWaitErr:
+		{
+			SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, CondWaitErr, "SyinxAdapter_Pth_Add CondWaitErr");
+			break;
+		}
 
-			case CondSignalErr:
-			{
-				SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, CondSignalErr, "SyinxAdapter_Pth_Add CondSignalErr");
-				break;
-			}
-			case VarIsNULL:         /*´«µÝ±äÁ¿Îª¿Õ*/
-			{
-				SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, VarIsNULL, "SyinxAdapter_Pth_Add VarIsNULL");
-				break;
-			}
-			case QueueIsMax:        /*ÈÎÎñ¶ÓÁÐÂúÁË*/
-			{
-				SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, QueueIsMax, "SyinxAdapter_Pth_Add VarIsNULL");
-				break;
-			}
-			case Shutdown:          /*¹Ø±Õ*/
-			{
-				SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, Shutdown, "Pthread_Pool Shutdown");
-				break;
-			}
-			default:
-				break;
-			}
+		case CondSignalErr:
+		{
+			SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, CondSignalErr, "SyinxAdapter_Pth_Add CondSignalErr");
+			break;
+		}
+		case VarIsNULL:         /*ä¼ é€’å˜é‡ä¸ºç©º*/
+		{
+			SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, VarIsNULL, "SyinxAdapter_Pth_Add VarIsNULL");
+			break;
+		}
+		case QueueIsMax:        /*ä»»åŠ¡é˜Ÿåˆ—æ»¡äº†*/
+		{
+			SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, QueueIsMax, "SyinxAdapter_Pth_Add VarIsNULL");
+			break;
+		}
+		case Shutdown:          /*å…³é—­*/
+		{
+			SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, Shutdown, "Pthread_Pool Shutdown");
+			break;
+		}
+		default:
+			break;
+		}
 	}
 }
-//Ð´ÊÂ¼þ»Øµ÷
+//å†™äº‹ä»¶å›žè°ƒ
 void SyinxKernel_Send_Cb(struct bufferevent* bev, void* ctx)
 {
 	auto mIC = (IChannel*)ctx;
 
 }
 
-//ÊÂ¼þ»Øµ÷
+//äº‹ä»¶å›žè°ƒ
 void SyinxKernel_Event_Cb(struct bufferevent* bev, short what, void* ctx)
 {
 	auto mIC = (IChannel*)ctx;
-	if (what & BEV_EVENT_EOF) // Client¶Ë¹Ø±ÕÁ¬½Ó 
+	if (what & BEV_EVENT_EOF) // Clientç«¯å…³é—­è¿žæŽ¥ 
 	{
 		SyinxKernel::mSyinx->mSyResource->SocketFd_Del(bev, 0);
 	}
-	else if (what & BEV_EVENT_ERROR) // Á¬½Ó³ö´í 
+	else if (what & BEV_EVENT_ERROR) // è¿žæŽ¥å‡ºé”™ 
 	{
 
 	}
-	else if (what & BEV_EVENT_WRITING)//Ð´ÈëÊ±·¢Éú×ö´íÎó
+	else if (what & BEV_EVENT_WRITING)//å†™å…¥æ—¶å‘ç”Ÿåšé”™è¯¯
 	{
 		SyinxKernel::mSyinx->mSyResource->SocketFd_Del(bev, 0);
 	}
 }
 
-//Èç¹ûÓÐ¿Í»§¶ËÁ¬½Ó
+//å¦‚æžœæœ‰å®¢æˆ·ç«¯è¿žæŽ¥
 void SyinxKernel_Listen_CB(struct evconnlistener* listener, evutil_socket_t fd, struct sockaddr* sock, int socklen, void* arg)
 {
 	SyinxDeliver* poSyinxDeliver = (SyinxDeliver*)arg;
@@ -166,52 +167,51 @@ void SyinxKernel_Listen_CB(struct evconnlistener* listener, evutil_socket_t fd, 
 
 	struct event_base* poSyinxBase = poSyinxDeliver->iSyinxBase;
 
-	//¿ò¼ÜµØÖ·
+	//æ¡†æž¶åœ°å€
 	SyinxKernel* mSyinx = poSyinxDeliver->iSyinx;
 
 	struct bufferevent* buffer = NULL;
 	buffer = bufferevent_socket_new(poSyinxBase, fd, BEV_OPT_CLOSE_ON_FREE);
 	if (buffer == NULL)
 	{
-		cout << "bufferevent_socket_new is failed" << endl;
 		SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, ClientConErr, "bufferevent_socket_new is failed");
 	}
 	char buf[BUFSIZ] = { 0 };
 
 	sprintf(buf, "New Client is connect : [%d]", fd);
-	SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::EVENT, SyinxLog::EVENT, buf);
+	SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::INFO, SyinxLog::EVENT, buf);
 
-	//½«½«ÐÂÀ´µÄ¿Í»§¶ËÎ¯ÍÐ×ÊÔ´¹ÜÀíÆ÷À´¹ÜÀí
-	int iRet = mSyinx->mSyResource->SyinxAdapterResource_AllotClient(buffer,fd);
+	//å°†å°†æ–°æ¥çš„å®¢æˆ·ç«¯å§”æ‰˜èµ„æºç®¡ç†å™¨æ¥ç®¡ç†
+	int iRet = mSyinx->mSyResource->SyinxAdapterResource_AllotClient(buffer, fd);
 
 	return;
 }
 int SyinxKernel::SyinxKernel_Init()
 {
 	SyinxKernel::mSyinx = new SyinxKernel;
-	//¶ÁÈ¡ÅäÖÃÎÄ¼þ
+	//è¯»å–é…ç½®æ–‡ä»¶
 	SyinxConfig conf;
 	mSyinx->SyConfMsg = conf.Read_Msgconfig();
 
 	uint16_t _inPort = (uint16_t)stoi(mSyinx->SyConfMsg->Port);
 
-	if (_inPort<=0 || _inPort >=65535 )
+	if (_inPort <= 0 || _inPort >= 65535)
 	{
 		char WriteLog[BUFFSIZE] = { 0 };
 		sprintf(WriteLog, "Port is %s : not within the scope of 0 - 65535", LogEvent_Error);
-		SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR , _inPort, WriteLog);
+		SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, _inPort, WriteLog);
 	}
-	
 
-	//³õÊ¼»¯½á¹¹Ìå
+
+	//åˆå§‹åŒ–ç»“æž„ä½“
 	struct sockaddr_in _Serveraddr;
 	memset(&_Serveraddr, 0, sizeof _Serveraddr);
 	_Serveraddr.sin_family = AF_INET;
 	_Serveraddr.sin_port = htons(_inPort);
-	
 
-	
-	//´´½¨¾ä±ú
+
+
+	//åˆ›å»ºå¥æŸ„
 	mSyinx->SyinxBase = event_base_new();
 	if (NULL == mSyinx->SyinxBase)
 	{
@@ -222,7 +222,7 @@ int SyinxKernel::SyinxKernel_Init()
 
 		return -1;
 	}
-	//ÉèÖÃ´«µÝ²ÎÊý
+	//è®¾ç½®ä¼ é€’å‚æ•°
 	SyinxDeliver* poSyinxDeliver = new SyinxDeliver;
 	poSyinxDeliver->iSyinxBase = mSyinx->SyinxBase;
 	poSyinxDeliver->iSyinxListen = mSyinx->SyinxListen;
@@ -234,7 +234,7 @@ int SyinxKernel::SyinxKernel_Init()
 	mSyinx->Server_Sockaddr.sin_addr = inet_ntoa(_Serveraddr.sin_addr);
 
 
-	//ÉèÖÃ¼àÌý
+	//è®¾ç½®ç›‘å¬
 	mSyinx->SyinxListen = evconnlistener_new_bind(mSyinx->SyinxBase, SyinxKernel_Listen_CB, (void*)poSyinxDeliver,
 		SETOPT_THREADSAFE_OR_SOCKETS_BLOCKING, 10, (const sockaddr*)& _Serveraddr, sizeof(_Serveraddr));
 	if (mSyinx->SyinxListen == NULL)
@@ -244,15 +244,29 @@ int SyinxKernel::SyinxKernel_Init()
 		SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, _inPort, WriteLog);
 		return -1;
 	}
-	//³õÊ¼»¯¼ÆÊ±Æ÷
+	//åˆå§‹åŒ–è®¡æ—¶å™¨
 	mSyinx->SyinxKernel_Addtimefd();
 
-	//³õÊ¼»¯ÊÊÅäÆ÷
-	mSyinx->SyinxKernel_InitAdapter();
-	return 1;
-	
+	//åˆå§‹åŒ–é€‚é…å™¨
+	try
+	{
+		int iRet = mSyinx->SyinxKernel_InitAdapter();
+		throw iRet;
+	}
+	catch (int iRetErr)
+	{
+		if (iRetErr == SyinxSuccess)
+		{
+			SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::INFO, 1, "SyinxKernel_InitAdapter Success!");
+		}
+		else
+		{
+			SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, 1, "SyinxKernel_InitAdapter failed!");
+		}
+	}
+	return SyinxSuccess;
 }
-//Ê±¼ä´¦Àí»Øµ÷
+//æ—¶é—´å¤„ç†å›žè°ƒ
 void SyinxKernel_TimerEvent_Cb(struct bufferevent* buffer, void* arg)
 {
 	auto mSyinx = (SyinxKernel*)arg;
@@ -260,26 +274,22 @@ void SyinxKernel_TimerEvent_Cb(struct bufferevent* buffer, void* arg)
 	{
 		mSyinx->SyinxKernel_Close();
 	}
-		
+
 }
 void SyinxKernel::SyinxKernel_Addtimefd()
 {
-	//ÏÈ³õÊ¼»¯ÊÂ¼þ¶ÓÁÐ
+	//å…ˆåˆå§‹åŒ–äº‹ä»¶é˜Ÿåˆ—
 
 
 	struct itimerspec setitimerspec;
-	//set ÖÜÆÚ
+	//set å‘¨æœŸ
 	setitimerspec.it_interval.tv_sec = this->SyConfMsg->Timerinterval;
 	setitimerspec.it_interval.tv_nsec = 0;
 
-	//set µÚÒ»´Î
+	//set ç¬¬ä¸€æ¬¡
 	setitimerspec.it_value.tv_sec = this->SyConfMsg->Timervalue;
 	setitimerspec.it_value.tv_nsec = 0;
 
-
-	
-	
-	
 	int tmfd;
 
 	tmfd = timerfd_create(CLOCK_MONOTONIC, 0);
@@ -301,20 +311,24 @@ void SyinxKernel::SyinxKernel_Addtimefd()
 
 	bufferevent_setcb(buffer, SyinxKernel_TimerEvent_Cb, NULL, NULL, (void*)mSyinx);
 
-	//ÉèÖÃbufferÊÂ¼þ
+	//è®¾ç½®bufferäº‹ä»¶
 	bufferevent_enable(buffer, EV_READ);
 
 }
 
 int SyinxKernel::SyinxKernel_InitAdapter()
 {
-	//³õÊ¼»¯Ïß³Ì¹ÜÀíÆ÷
-	SyinxAdapterPth* nSyPth = new SyinxAdapterPth(SyConfMsg->PthNum,SyConfMsg->TaskNum);
+	//åˆå§‹åŒ–çº¿ç¨‹ç®¡ç†å™¨
+	SyinxAdapterPth* nSyPth = new SyinxAdapterPth(SyConfMsg->PthNum, SyConfMsg->TaskNum);
 
-	//³õÊ¼»¯×ÊÔ´¹ÜÀíÆ÷
+	//åˆå§‹åŒ–èµ„æºç®¡ç†å™¨
 	SyinxAdapterResource* nSyRes = new SyinxAdapterResource();
 
-	/*»¥Ïà°ó¶¨*/
+	//åˆå§‹åŒ–æ•°æ®åº“
+	SyMysqlConPool* nMysqlPool = new SyMysqlConPool;
+
+
+	/*äº’ç›¸ç»‘å®š*/
 	//pth
 	nSyPth->mPthRes = nSyRes;
 	nSyPth->mSyinx = mSyinx;
@@ -325,10 +339,13 @@ int SyinxKernel::SyinxKernel_InitAdapter()
 	//msyinx
 	mSyinx->mSyPth = nSyPth;
 	mSyResource = nSyRes;
+
+	//mysql
+	mSyinx->mSyMysqlPool = nMysqlPool;
 	int iRet = 0;
 
-	//³õÊ¼»¯Ïß³Ì³Ø
-	try 
+	//åˆå§‹åŒ–çº¿ç¨‹æ± 
+	try
 	{
 		int iRet = mSyinx->mSyPth->SyinxAdapterPth_Init();
 		throw iRet;
@@ -337,15 +354,47 @@ int SyinxKernel::SyinxKernel_InitAdapter()
 	{
 		if (RetErr == -1)
 		{
-			SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, iRet, "SyinxAdapterPth_Init is failed");
-			return -1;
+			SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, RetErr, "SyinxAdapterPth_Init is failed");
+			return RetErr;
 		}
+	}
+	//åˆå§‹åŒ–Mysqlè¿žæŽ¥æ± 
+	try
+	{
+		int iRet = nMysqlPool->SyMysqlConPool_Init(SyConfMsg->MysqlPoolNum, SyConfMsg->MysqlHost, SyConfMsg->MysqlUser, SyConfMsg->MysqlPasswd, SyConfMsg->MysqlDatabase);
+		nMysqlPool->SyMysqlConPool_Init(20, "192.168.12.135", "root", "123456", "mytest");
+		throw(iRet);
 
 	}
-	return 1;
+	catch (int RetErr)
+	{
+		switch (RetErr)
+		{
+		case MysqlSuccess:
+		{
+			break;
+		}
+		case MysqlInitErr:
+		{
+			SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, RetErr, "MysqlInitErr");
+			return RetErr;
+		}
+		case MysqlConErr:
+		{
+			SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, RetErr, "Mysql connect is failed");
+			return RetErr;
+		}
+		case MysqlMutexInitErr:
+		{
+			SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, RetErr, "MysqlMutexInitErr");
+			return RetErr;
+		}
+		default:
+			break;
+		}
+	}
+	return SyinxSuccess;
 }
-
-
 
 void SyinxKernel::SyinxKernel_Run()
 {
@@ -378,7 +427,13 @@ void SyinxKernel::SyinxKernel_Close()
 		delete SyinxKernel::mSyinx->mSyResource;
 	}
 
-	//¹Ø±Õ¼àÌý
+	if (SyinxKernel::mSyinx->mSyMysqlPool != NULL)
+	{
+		SyMysqlConPool::Mysqlpool->SyMysqlConPool_destroy();
+		delete SyMysqlConPool::Mysqlpool;
+	}
+
+	//å…³é—­ç›‘å¬
 	evconnlistener_free(mSyinx->SyinxListen);
 	event_base_free(mSyinx->SyinxBase);
 
@@ -388,7 +443,7 @@ void SyinxKernel::SyinxKernel_Close()
 
 	SyinxKernel::SyinxKernel_FreeShm();
 
-	cout << "Syinx is close";
+	cout << "Syinx is close" << endl;
 }
 
 void SyinxKernel::SyinxKernel_MakeShm()
@@ -417,13 +472,13 @@ void SyinxKernel::SyinxKernel_MakeShm()
 	strcpy(mShmData->IP, mSyinx->Server_Sockaddr.sin_addr.c_str());
 	strcpy(mShmData->Port, mSyinx->Server_Sockaddr.Prot.c_str());
 
-	//¹²ÏíÄÚ´æ±£´æ¿ò¼ÜµØÖ·
+	//å…±äº«å†…å­˜ä¿å­˜æ¡†æž¶åœ°å€
 	mShmData->mSyinx = SyinxKernel::mSyinx;
 
-	//ÓÀ¾Ã±£´æ¹²ÏíÄÚ´æ
+	//æ°¸ä¹…ä¿å­˜å…±äº«å†…å­˜
 	mSyinx->mShmData = mShmData;
 
-	
+
 }
 
 
@@ -466,11 +521,11 @@ void SyinxKernelWork::PrintfServerStatus()
 	}
 	else
 	{
-		
+
 		cout << "Syinx-status:" << "\033[31;1m  close  \033[0m" << endl;
 		exit(0);
 	}
-	printf("IP:[%s] Prot:[%s]\n",mShmData->IP, mShmData->Port);
+	printf("IP:[%s] Prot:[%s]\n", mShmData->IP, mShmData->Port);
 	printf("Total server connections : [%d]\n", mShmData->AllClientNum);
 
 	printf("\n");
@@ -515,7 +570,7 @@ void SyinxKernelWork::SyinxExit()
 	}
 	void* ShmData = shmat(shmid, NULL, 0);
 	auto mShmData = (SyinxKernelShmMsg*)ShmData;
-	
+
 	mShmData->ExitSignal = true;
 
 
@@ -539,7 +594,7 @@ SyinxKernelWork::SyinxKernelWork(int argc, char* argv[])
 	}
 	else if (!strcmp(COMMMEND_PARAM, "-s"))
 	{
-		//´òÓ¡×´Ì¬
+		//æ‰“å°çŠ¶æ€
 		this->PrintfServerStatus();
 		exit(0);
 	}
@@ -563,6 +618,5 @@ SyinxKernelWork::SyinxKernelWork(int argc, char* argv[])
 
 SyinxKernelWork::~SyinxKernelWork()
 {
-	
-}
 
+}

@@ -2,7 +2,7 @@
 #define _SYINX_LOG_H_
 #include <cstdarg>
 /************************************************************************/
-/* 
+/*
 const char *file：文件名称
 int line：文件行号
 int level：错误级别
@@ -29,16 +29,16 @@ public:
 		ERROR,
 		EVENT,
 	};
-    void Log(const char *file, int line, int level, int status, const char *fmt, ...);
-    SyinxLog();
-    ~SyinxLog();
+	void Log(const char* file, int line, int level, int status, const char* fmt, ...);
+	SyinxLog();
+	~SyinxLog();
 	static SyinxLog mLog;
 
 private:
-    int SYINX_Error_GetCurTime(char* strTime);
-    int SYINX_Error_OpenFile(int* pf);
-    void SYINX_Error_Core(const char *file, int line, int level, int status, const char *fmt, va_list args);
-	
+	int SYINX_Error_GetCurTime(char* strTime);
+	int SYINX_Error_OpenFile(int* pf);
+	void SYINX_Error_Core(const char* file, int line, int level, int status, const char* fmt, va_list args);
+
 };
 
 #endif

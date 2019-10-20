@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include "SyPthreadPool.h"
 
 #define SOCKETS	                                         int
@@ -8,40 +8,40 @@ class SyinxPthreadPool;
 struct threadpool_t;
 struct Principal_Pth;
 
-//Ïß³ÌÊÊÅäÆ÷
+//çº¿ç¨‹é€‚é…å™¨
 class SyinxAdapterPth :public SyinxAdapter
 {
 	friend class SyinxKernel;
 	friend class SyinxAdapterResource;
 public:
 	SyinxAdapterPth();
-	SyinxAdapterPth(int PthPoolNum, int TaskMaxNum) : PthPoolNum(PthPoolNum), TaskMaxNum(TaskMaxNum){}
+	SyinxAdapterPth(int PthPoolNum, int TaskMaxNum) : PthPoolNum(PthPoolNum), TaskMaxNum(TaskMaxNum) {}
 	~SyinxAdapterPth();
 
 
-public://³õÊ¼»¯´ÎÒªÏß³Ì³Ø
+public://åˆå§‹åŒ–æ¬¡è¦çº¿ç¨‹æ± 
 	int SyinxAdapterPth_Init();
 
-   //ÏòÏß³Ì³ØÀïÌí¼ÓÒ»¸öÈÎÎñ,ÈÎÎñ»á±»¼ÓÔØµ½ÈÎÎñ¶ÓÁĞ
+	//å‘çº¿ç¨‹æ± é‡Œæ·»åŠ ä¸€ä¸ªä»»åŠ¡,ä»»åŠ¡ä¼šè¢«åŠ è½½åˆ°ä»»åŠ¡é˜Ÿåˆ—
 	static int SyinxAdapter_Pth_Add(void* (*taskfunc)(void*), void* arg);
 
-	//Ïú»ÙÏß³Ì³Ø
+	//é”€æ¯çº¿ç¨‹æ± 
 	int SyinxAdapter_Pth_destroy();
 
-	//²¢·¢Ïß³Ì³ØÊıÁ¿
+	//å¹¶å‘çº¿ç¨‹æ± æ•°é‡
 	int PthPoolNum;
-	//ÉèÖÃÈÎÎñ¶ÓÁĞÊıÁ¿
+	//è®¾ç½®ä»»åŠ¡é˜Ÿåˆ—æ•°é‡
 	int TaskMaxNum;
 private:
 
-	//°ó¶¨×ÊÔ´ÊÊÅäÆ÷
+	//ç»‘å®šèµ„æºé€‚é…å™¨
 	SyinxAdapterResource* mPthRes;
 
-	//°ó¶¨¿ò¼ÜµØÖ·
+	//ç»‘å®šæ¡†æ¶åœ°å€
 	SyinxKernel* mSyinx;
 
 
-	//±£´æ´ÎÒªÏß³Ì³ØÊôĞÔ½á¹¹Ìå
+	//ä¿å­˜æ¬¡è¦çº¿ç¨‹æ± å±æ€§ç»“æ„ä½“
 	threadpool_t* mSyinxPthPool;
 
 };

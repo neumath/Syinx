@@ -1,20 +1,20 @@
-#ifndef _Syinx_H_
+ï»¿#ifndef _Syinx_H_
 #define _Syinx_H_
 #include "SyInc.h"
 #include "SyLog.h"
 
-//ÉèÖÃÏß³Ì°²È«ÒÔ¼°¹Ø±Õµ×²ãÌ×½Ó×Ö  ÏêÏ¸Çë¿´libeventÎÄµµ
+//è®¾ç½®çº¿ç¨‹å®‰å…¨ä»¥åŠå…³é—­åº•å±‚å¥—æ¥å­—  è¯¦ç»†è¯·çœ‹libeventæ–‡æ¡£
 #define SETOPT_THREADSAFE_OR_SOCKETS_BLOCKING           (LEV_OPT_LEAVE_SOCKETS_BLOCKING | LEV_OPT_THREADSAFE)
-//ÉèÖÃÏß³Ì°²È«ÒÔ¼°¹Ø±Õµ×²ãÌ×½Ó×ÖÒÔ¼°ÉèÖÃclose±êÖ¾Î»  ÏêÏ¸Çë¿´libeventÎÄµµ
+//è®¾ç½®çº¿ç¨‹å®‰å…¨ä»¥åŠå…³é—­åº•å±‚å¥—æ¥å­—ä»¥åŠè®¾ç½®closeæ ‡å¿—ä½  è¯¦ç»†è¯·çœ‹libeventæ–‡æ¡£
 #define SETOPT_THREADSAFE_OR_SOCKETS_BLOCKING_OR_FREE   (LEV_OPT_LEAVE_SOCKETS_BLOCKING | LEV_OPT_THREADSAFE |  LEV_OPT_CLOSE_ON_FREE)
-//ÉèÖÃ¶ÁĞ´Ñ­»·
+//è®¾ç½®è¯»å†™å¾ªç¯
 #define SET_SOCKETS_EVENT_RDWR                          (EV_READ | EV_WRITE | EV_PERSIST)
-//ÉèÖÃ¶ÁÑ­»·
+//è®¾ç½®è¯»å¾ªç¯
 #define SET_SOCKETS_EVENT_RD                            (EV_READ | EV_PERSIST)
-//ÃüÁî²ÎÊı
+//å‘½ä»¤å‚æ•°
 #define COMMMEND_PARAM                                   argv[1]
 #define SET_SHM_KEY                                      0x8855
-                                  
+
 
 #define SYINXMOD_ADD_MYSQL                               
 enum  PthStatus
@@ -24,11 +24,11 @@ enum  PthStatus
 	PthExit,
 };
 /*
-	ÉùÃ÷ĞèÒªĞ´ÈëlogµÄÊÂ¼ş·¢Éú¼¶±ğµÄ×Ö·û´®
-	·ÖÎª
-	EVENT    ÊÂ¼ş·¢Éú   1
-	WARNING  ¾¯¸æ       2
-	ERROR    ´íÎó       3
+	å£°æ˜éœ€è¦å†™å…¥logçš„äº‹ä»¶å‘ç”Ÿçº§åˆ«çš„å­—ç¬¦ä¸²
+	åˆ†ä¸º
+	EVENT    äº‹ä»¶å‘ç”Ÿ   1
+	WARNING  è­¦å‘Š       2
+	ERROR    é”™è¯¯       3
 */
 
 
@@ -37,36 +37,39 @@ enum SyinxKernelErrno
 	PortErr = 3,
 	CreateBaseErr = 3,
 	ClientConErr = 3,
+
+	//Success
+	SyinxSuccess,
 };
 
 
 
 class SyinxKernel;
 
-//¿ò¼ÜÈ«²¿ĞÅÏ¢ÓÃÓÚ½ø³ÌÍ¨ĞÅ
+//æ¡†æ¶å…¨éƒ¨ä¿¡æ¯ç”¨äºè¿›ç¨‹é€šä¿¡
 struct SyinxKernelShmMsg
 {
-	bool SyinxKernewWork;     /*±£´æµ±Ç°·şÎñÆ÷×´Ì¬*/
+	bool SyinxKernewWork;     /*ä¿å­˜å½“å‰æœåŠ¡å™¨çŠ¶æ€*/
 
-	int PthNum;               /*±£´æµ±Ç°¿ªÆôµÄÖ÷ÈÎÎñÊıÁ¿*/
+	int PthNum;               /*ä¿å­˜å½“å‰å¼€å¯çš„ä¸»ä»»åŠ¡æ•°é‡*/
 
-	int AllClientNum;         /*ËùÓĞ¿Í»§¶ËÁ¬½ÓÊıÁ¿*/
+	int AllClientNum;         /*æ‰€æœ‰å®¢æˆ·ç«¯è¿æ¥æ•°é‡*/
 
-	char IP[16];                 /*±£´æip*/
+	char IP[16];                 /*ä¿å­˜ip*/
 
-	char Port[8];                /*±£´æ¶Ë¿ÚºÅ*/
+	char Port[8];                /*ä¿å­˜ç«¯å£å·*/
 
-	bool ExitSignal;             /*syinxÍË³öĞÅºÅ*/
+	bool ExitSignal;             /*syinxé€€å‡ºä¿¡å·*/
 
-	SyinxKernel* mSyinx;         /*±£´æ¿ò¼ÜµÄµØÖ·*/
+	SyinxKernel* mSyinx;         /*ä¿å­˜æ¡†æ¶çš„åœ°å€*/
 
-}; 
+};
 struct SyinxKernelTimer_task_t
 {
 	void* (*taskfunc)(void*);
 	void* arg;
 };
-
+//æ¡†æ¶å…¶ä»–ç±»å£°æ˜
 class SyinxLog;
 class IChannel;
 class SyinxAdapterMission;
@@ -76,24 +79,26 @@ class SyinxPthreadPool;
 class SyinxConfig;
 
 class SyinxKernel;
+class SyMysqlConPool;
+
 struct SyinxKernelShmMsg;
 struct SyinxConfMsg;
 
 
-//ÉùÃ÷»Øµ÷
-//Ê±¼ä´¦Àí»Øµ÷
+//å£°æ˜å›è°ƒ
+//æ—¶é—´å¤„ç†å›è°ƒ
 void SyinxKernel_TimerEvent_Cb(struct bufferevent* buffer, void* arg);
-//¶Á³ö»Øµ÷
+//è¯»å‡ºå›è°ƒ
 void SyinxKernel_Recv_Cb(struct bufferevent* bev, void* ctx);
-//Ğ´ÊÂ¼ş»Øµ÷
+//å†™äº‹ä»¶å›è°ƒ
 void SyinxKernel_Send_Cb(struct bufferevent* bev, void* ctx);
-//ÊÂ¼ş»Øµ÷
+//äº‹ä»¶å›è°ƒ
 void SyinxKernel_Event_Cb(struct bufferevent* bev, short what, void* ctx);
 
-//ÉùÃ÷Ò»¸öÈÎÎñº¯Êı
+//å£°æ˜ä¸€ä¸ªä»»åŠ¡å‡½æ•°
 void* IChannelTaskProcessing(void* arg);
-//ÓÃÓÚ³õÊ¼»¯µÄºËĞÄ¿ò¼Ü
-class SyinxKernel 
+//ç”¨äºåˆå§‹åŒ–çš„æ ¸å¿ƒæ¡†æ¶
+class SyinxKernel
 {
 	friend class SyinxKernelWork;
 	friend class SyinxAdapterPth;
@@ -102,74 +107,76 @@ class SyinxKernel
 	friend void SyinxKernel_Listen_CB(struct evconnlistener* listener, evutil_socket_t fd, struct sockaddr* sock, int socklen, void* arg);
 	friend void SyinxKernel_TimerEvent_Cb(struct bufferevent* buffer, void* arg);
 public:
-	
-	//³õÊ¼»¯¿ò¼Ü
+
+	//åˆå§‹åŒ–æ¡†æ¶
 	static int SyinxKernel_Init();
 
 
-	//ÔËĞĞ¿ò¼Ü(wait)
+	//è¿è¡Œæ¡†æ¶(wait)
 	static void SyinxKernel_Run();
 
-	//¹Ø±Õ¿ò¼Ü
+	//å…³é—­æ¡†æ¶
 	static void SyinxKernel_Close();
 
 
-	//Í¨¹ı¹²ÏíÄÚ´æ¹²ÏíÊı¾İÇé±¨
-	//´´½¨¹²ÏíÄÚ´æ
+	//é€šè¿‡å…±äº«å†…å­˜å…±äº«æ•°æ®æƒ…æŠ¥
+	//åˆ›å»ºå…±äº«å†…å­˜
 	static void SyinxKernel_MakeShm();
-	
-	//ÊÍ·Å¹²ÏíÄÚ´æ
+
+	//é‡Šæ”¾å…±äº«å†…å­˜
 	static void SyinxKernel_FreeShm();
 
-	//´´½¨³õÊ¼»¯±¾µØÌ×½Ó×Ö
+	//åˆ›å»ºåˆå§‹åŒ–æœ¬åœ°å¥—æ¥å­—
 	static void SyinxKernel_LocalSock();
 
-	//·µ»Ø¹²ÏíÄÚ´æµØÖ·
+	//è¿”å›å…±äº«å†…å­˜åœ°å€
 	SyinxKernelShmMsg* GetSyinxKernelShmMsg()const;
 
 private:
-	//Îª×Ô¼ºÌí¼ÓÊ±¼ä¼ÆÊ±Æ÷
+	//ä¸ºè‡ªå·±æ·»åŠ æ—¶é—´è®¡æ—¶å™¨
 	void SyinxKernel_Addtimefd();
 
-	//±£´æ»ùÓÚÊÂ¼şÃèÊö·ûµÄÊÂ¼ş¶ÓÁĞ
+	//ä¿å­˜åŸºäºäº‹ä»¶æè¿°ç¬¦çš„äº‹ä»¶é˜Ÿåˆ—
 
 	SyinxKernelTimer_task_t** TimeEvent_Task;
-	//¿ò¼Ü³õÊ¼»¯ÊÊÅäÆ÷
+	//æ¡†æ¶åˆå§‹åŒ–é€‚é…å™¨
 	int SyinxKernel_InitAdapter();
 
 private:
-	//ÓÃÓÚ±£´æÒ»¸öÖ÷ÒªµÄbase¾ä±úÖ»ÊÊÓÃÓÚÁ¬½Ó
+	//ç”¨äºä¿å­˜ä¸€ä¸ªä¸»è¦çš„baseå¥æŸ„åªé€‚ç”¨äºè¿æ¥
 	struct event_base* SyinxBase;
 
-	//±£´æÓÃÓÚ¼àÌıÌ×½Ó×ÖµÄevconnlistener
+	//ä¿å­˜ç”¨äºç›‘å¬å¥—æ¥å­—çš„evconnlistener
 	struct evconnlistener* SyinxListen;
 
-	//¿Í»§¶Ëport
+	//å®¢æˆ·ç«¯port
 	short _Port;
 
-	//±£´æÒ»¸ö¹²ÏíÄÚ´æµÄshmid
+	//ä¿å­˜ä¸€ä¸ªå…±äº«å†…å­˜çš„shmid
 	int ShmId;
 
-	//±£´æ¹²ÏíÄÚ´æµÄÍòÄÜÖ¸Õë
+	//ä¿å­˜å…±äº«å†…å­˜çš„ä¸‡èƒ½æŒ‡é’ˆ
 	void* ShmData;
 	SyinxKernelShmMsg* mShmData = nullptr;
-	
-	//±£´æ±¾Ì×½Ó×Ö
+
+	//ä¿å­˜æœ¬å¥—æ¥å­—
 	int LocalSocket;
 
-	//±£´æ¶ÁÈ¡ÅäÖÃÎÄ¼şµÄĞÅÏ¢
+	//ä¿å­˜è¯»å–é…ç½®æ–‡ä»¶çš„ä¿¡æ¯
 	SyinxConfMsg* SyConfMsg;         //free
 public:
-	//°ó¶¨Ò»·İÒ»¸öSyinxAdapterPtÏß³ÌÊÊÅäÆ÷
+	//ç»‘å®šä¸€ä»½ä¸€ä¸ªSyinxAdapterPtçº¿ç¨‹é€‚é…å™¨
 	SyinxAdapterPth* mSyPth;
-	//°ó¶¨Ò»¸öÈÎÎñÊÊÅäÆ÷
-	SyinxAdapterMission* mSyMission;
-	//°ó¶¨Ò»¸ö×ÊÔ´ÊÊÅäÆ÷
+
+	//ç»‘å®šä¸€ä¸ªèµ„æºé€‚é…å™¨
 	SyinxAdapterResource* mSyResource;
+
+	//ä¿å­˜ä¸€ä¸ªæ•°æ®åº“å¯¹è±¡
+	SyMysqlConPool* mSyMysqlPool;
 
 public:
 
-	//±£´æ·şÎñÆ÷µÄsockaddr_in
+	//ä¿å­˜æœåŠ¡å™¨çš„sockaddr_in
 	struct Server_Sockaddr {
 		std::string Prot;
 		std::string sin_addr;
@@ -177,49 +184,49 @@ public:
 	}Server_Sockaddr;
 
 public:
-	//×Ô¼ºµÄÖ¸Õë
+	//è‡ªå·±çš„æŒ‡é’ˆ
 	static SyinxKernel* mSyinx;
 
 
-private: //Ë½ÓĞ¹¹Ôìº¯Êı
+private: //ç§æœ‰æ„é€ å‡½æ•°
 	SyinxKernel();
 	SyinxKernel(SyinxKernel&) = default;
 	~SyinxKernel();
 public:
 
-	//Êı¾İ¿âºËĞÄÄ£¿éÒıÓÃ
+	//æ•°æ®åº“æ ¸å¿ƒæ¨¡å—å¼•ç”¨
 	static int SyDatabaseMod;
 private:
-	//ÒıÓÃÌõ¼ş±àÒë
+	//å¼•ç”¨æ¡ä»¶ç¼–è¯‘
 	int SyinxAddDatabase();
 
 };
-//ÍĞ¹ÜºËĞÄ³õÊ¼»¯¿ªÆôÀà,ÒÔ¼°ÅĞ¶ÏÊäÈë²ÎÊı
+//æ‰˜ç®¡æ ¸å¿ƒåˆå§‹åŒ–å¼€å¯ç±»,ä»¥åŠåˆ¤æ–­è¾“å…¥å‚æ•°
 class SyinxKernelWork
 {
 public:
-	SyinxKernelWork(){}
+	SyinxKernelWork() {}
 	SyinxKernelWork(int argc, char* argv[]);
 	~SyinxKernelWork();
 public:
-	
-	//´òÓ¡·şÎñÆ÷×´Ì¬  -s
+
+	//æ‰“å°æœåŠ¡å™¨çŠ¶æ€  -s
 	void PrintfServerStatus();
 
-	
+
 	void Makedaemon();
 
 	void SyinxExit();
 
-	//±£´æ¿ò¼ÜµÄµØÖ·
+	//ä¿å­˜æ¡†æ¶çš„åœ°å€
 	SyinxKernel* mSyinx;
 
 
-	//±£´æ½ø³Ìid
+	//ä¿å­˜è¿›ç¨‹id
 	int Pid_t;
 
 	bool SyinxKernelStatus = false;
-	
+
 	int SyinxKernelExit;
 };
 
@@ -230,12 +237,12 @@ public:
 /*
 {
 
-	ÉèÖÃÓÃ»§:char
-	·şÎñÆ÷¶Ë¿Ú:int
+	è®¾ç½®ç”¨æˆ·:char
+	æœåŠ¡å™¨ç«¯å£:int
 
-	·şÎñÆ÷¼¯ÈºÊıÁ¿:int
-	#ÊıÁ¿±ØĞëÓëGroupµÄserverµÄÊıÁ¿Ò»ÖÂ
-	Group:(char)·şÎñÆ÷¼¯ÈºÃû×Ö{
+	æœåŠ¡å™¨é›†ç¾¤æ•°é‡:int
+	#æ•°é‡å¿…é¡»ä¸Groupçš„serverçš„æ•°é‡ä¸€è‡´
+	Group:(char)æœåŠ¡å™¨é›†ç¾¤åå­—{
 			server#1:(int)id
 			server#2:
 	}

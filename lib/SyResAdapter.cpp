@@ -1,4 +1,4 @@
-#include "Syinx.h"
+ï»¿#include "Syinx.h"
 #include "SyAdapter.h"
 #include "SyResAdapter.h"
 #include "SyPthreadAdapter.h"
@@ -9,7 +9,7 @@
 #include <random>
 #include <errno.h>
 #include <iterator>
-//¶¨ÒåÒ»¸öËæ»úÒýÇæ(¾ùÔÈ·Ö²¼)
+//å®šä¹‰ä¸€ä¸ªéšæœºå¼•æ“Ž(å‡åŒ€åˆ†å¸ƒ)
 static std::default_random_engine gRandomEngine(time(nullptr));
 
 SyinxAdapterResource::SyinxAdapterResource()
@@ -23,7 +23,7 @@ SyinxAdapterResource::~SyinxAdapterResource()
 
 
 
-//½«ÐÂÁ¬½ÓµÄ¿Í»§¶Ë½øÐÐ·ÖÅä
+//å°†æ–°è¿žæŽ¥çš„å®¢æˆ·ç«¯è¿›è¡Œåˆ†é…
 int SyinxAdapterResource::SyinxAdapterResource_AllotClient(bufferevent* buffer, SOCKETS _FD)
 {
 	return this->SocketFd_Add(buffer, _FD);
@@ -35,32 +35,32 @@ int SyinxAdapterResource::SocketFd_Add(bufferevent* buffer, SOCKETS _FD)
 	{
 		return -1;
 	}
-	
+
 
 	IChannelMsg* icmsg = new IChannelMsg;;  //need free
 	icmsg->buffer = buffer;
 	icmsg->Socket = _FD;
 
 
-	//³õÊ¼»¯¶ÔÏó¶ÀÏíµÄÍ¨µÀ²ã
+	//åˆå§‹åŒ–å¯¹è±¡ç‹¬äº«çš„é€šé“å±‚
 	IChannel* newClieICh = new IChannel;
 	newClieICh->ICannel_Init(icmsg);
 
-	//°ó¶¨×ÊÔ´¹ÜÀíÆ÷µÄµØÖ·
+	//ç»‘å®šèµ„æºç®¡ç†å™¨çš„åœ°å€
 	newClieICh->mICnSaveRes = this;
-	//ÉÏmapÈÝÆ÷
+	//ä¸Šmapå®¹å™¨
 	this->mIChannelMap.insert(std::make_pair(buffer, newClieICh));
 
-	//¸üÐÂ¹²ÏíÄÚ´æ
+	//æ›´æ–°å…±äº«å†…å­˜
 	this->SyinxAdapterResource_UpdateShm();
 
 
-	//ÉèÖÃbuffer»Øµ÷ÒÔ¼°ÊÂ¼þ»Øµ÷
+	//è®¾ç½®bufferå›žè°ƒä»¥åŠäº‹ä»¶å›žè°ƒ
 	bufferevent_setcb(buffer, SyinxKernel_Recv_Cb, SyinxKernel_Send_Cb, SyinxKernel_Event_Cb, (void*)newClieICh);
 
-	//ÉèÖÃbufferÊÂ¼þ
+	//è®¾ç½®bufferäº‹ä»¶
 	bufferevent_enable(buffer, SET_SOCKETS_EVENT_RD);
-	
+
 
 	return 0;
 }
@@ -72,7 +72,7 @@ int SyinxAdapterResource::SocketFd_Del(bufferevent* buffer, SOCKETS _FD)
 	bufferevent_free(_it->first);
 	this->mIChannelMap.erase(_it);
 
-	//¸üÐÂ¹²ÏíÄÚ´æ
+	//æ›´æ–°å…±äº«å†…å­˜
 	this->SyinxAdapterResource_UpdateShm();
 	char WriteLog[BUFFSIZE] = { 0 };
 	sprintf(WriteLog, "Client is Exit, Current number of connections[%ld]", this->mIChannelMap.size());

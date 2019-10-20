@@ -1,16 +1,22 @@
-#ifndef _SYCONFIG_H_
+ï»¿#ifndef _SYCONFIG_H_
 #define _SYCONFIG_H_ 
 class SyinxLog;
 struct SyinxConfMsg {
 
 	std::string Host;                //ip
-	std::string Port;                //¶Ë¿Ú
-	int    PthNum;             //ÉèÖÃepollÊ÷ÊıÁ¿
-	int    TaskNum;             //ÉèÖÃepollÊ÷ÈİÁ¿
+	std::string Port;                //ç«¯å£
+	int    PthNum;             //è®¾ç½®epollæ ‘æ•°é‡
+	int    TaskNum;             //è®¾ç½®epollæ ‘å®¹é‡
 
 
-	int    Timerinterval;       //ÉèÖÃ¼ÆÊ±Æ÷ÖÜÆÚÊ±¼ä
-	int    Timervalue;          //¼ÆÊ±Æ÷µÚÒ»´ÎÑÓ³ÙÊÂ¼ş
+	int    Timerinterval;       //è®¾ç½®è®¡æ—¶å™¨å‘¨æœŸæ—¶é—´
+	int    Timervalue;          //è®¡æ—¶å™¨ç¬¬ä¸€æ¬¡å»¶è¿Ÿäº‹ä»¶
+
+	int            MysqlPoolNum;
+	std::string    MysqlHost;
+	std::string    MysqlUser;
+	std::string    MysqlPasswd;
+	std::string    MysqlDatabase;
 
 };
 class SyinxConfig {
@@ -19,7 +25,7 @@ public:
 	~SyinxConfig();
 
 public:
-	//¶ÁÈ¡ÅäÖÃÎÄ¼ş
+	//è¯»å–é…ç½®æ–‡ä»¶
 	SyinxConfMsg* Read_Msgconfig();
 
 public:

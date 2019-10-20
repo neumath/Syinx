@@ -1,6 +1,7 @@
 #include <fstream>
 #include <istream>
 #include <iostream>
+#include <string.h>
 #include <time.h>
 #include <sys/socket.h>
 #include <sys/epoll.h>
@@ -29,7 +30,14 @@ SyinxConfMsg* SyinxConfig::Read_Msgconfig()
 		cout << "conf is not find" << endl;
 		return NULL;
 	}
+
 	mkdir("log", S_IRWXU | S_IRGRP | S_IROTH);
+	if (access("./log/Syderlog.log", F_OK))
+	{
+		unlink("./log/Syderlog.log");
+	}
+
+	//配置文件写入日志
 	string line;
 	SyinxConfMsg* sMsg = new SyinxConfMsg;
 
@@ -41,11 +49,19 @@ SyinxConfMsg* SyinxConfig::Read_Msgconfig()
 			continue;
 		if (line[0] == ' ')
 			continue;
-		if (line.size() == 0)
+		if (line.size() == 0 || !(line.size() - 1))
 			continue;
-		string _Key = line.substr(0, line.find(':'));
-		string _Value = line.substr(line.find(':') + 1, line.size() - line.find(':'));
-		
+
+		string _Key;
+		string _Value;
+
+		_Key = line.substr(0, line.find(':'));
+
+		_Value = line.substr(line.find('\"') + 1, line.rfind('\"') - line.find('\"') - 1);
+		char WriteLog[64] = { 0 };
+		sprintf(WriteLog, "======>%s:%s \n", _Key.c_str(), _Value.c_str());
+		SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::INFO, 0, WriteLog);
+
 
 		if (_Key == "Host")
 			sMsg->Host = _Value;
@@ -59,17 +75,35 @@ SyinxConfMsg* SyinxConfig::Read_Msgconfig()
 			sMsg->Timerinterval = stoi(_Value);
 		if (_Key == "SetTimevalue")
 			sMsg->Timervalue = stoi(_Value);
+
+		//sql
+		if (_Key == "SetMysqlPoolNum")
+			sMsg->MysqlPoolNum = stoi(_Value);
+		if (_Key == "SetMysqlHost")
+			sMsg->MysqlHost =  _Value ;
+		if (_Key == "SetMysqlUser")
+			sMsg->MysqlUser =  _Value ;
+		if (_Key == "SetMysqlPasswd")
+			sMsg->MysqlPasswd = _Value ;
+		if (_Key == "SetMysqlDatabase")
+			sMsg->MysqlDatabase =_Value ;
 	}
+	_fconf.close();
 
 #ifdef CONFTEST
-	cout << sMsg->Host << endl;
+	cout << sMsg->Host << sMsg->Host.size() << endl;
 	cout << sMsg->Port << endl;
-	cout << sMsg->TreeNum << endl;
-	cout << sMsg->TreeCap << endl;
-	cout << sMsg->loadbalancing << endl;
+	cout << sMsg->PthNum << endl;
+	cout << sMsg->TaskNum << endl;
+
 	cout << sMsg->Timerinterval << endl;
 	cout << sMsg->Timervalue << endl;
+
+	cout << sMsg->MysqlPoolNum << endl;
+	cout << sMsg->MysqlHost.c_str() - 1 << endl;
+	cout << sMsg->MysqlUser.size() << endl;
+	cout << sMsg->MysqlPasswd.size() << endl;
+	cout << sMsg->MysqlDatabase << endl;
 #endif
 	return sMsg;
 }
-

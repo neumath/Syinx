@@ -1,4 +1,4 @@
-#ifndef _SYRESADAPTER_H_
+ï»¿#ifndef _SYRESADAPTER_H_
 #define _SYRESADAPTER_H_
 class SyinxAdapter;
 class SyinxAdapterPth;
@@ -8,10 +8,10 @@ class SyinxKernel;
 #define BUFFSIZE                                         256
 struct SyinxConfMsg;
 class SyinxConfig;
-//×ÊÔ´ÊÊÅäÆ÷
+//èµ„æºé€‚é…å™¨
 class SyinxAdapterResource : public SyinxAdapter
 {
-	
+
 	friend void SyinxKernel_Listen_CB(struct evconnlistener* listener, evutil_socket_t fd, struct sockaddr* sock, int socklen, void* arg);
 	friend class SyinxKernel;
 	friend class SyinxAdapterPth;
@@ -25,37 +25,36 @@ public:
 
 private:
 
-	//½«ĞÂÁ¬½ÓµÄ¿Í»§¶Ë½øĞĞ·ÖÅä
-	int SyinxAdapterResource_AllotClient(bufferevent *buffer,SOCKETS _FD);
+	//å°†æ–°è¿æ¥çš„å®¢æˆ·ç«¯è¿›è¡Œåˆ†é…
+	int SyinxAdapterResource_AllotClient(bufferevent* buffer, SOCKETS _FD);
 
-	//½«ĞÂµÄÎÄ¼şÃèÊö·û×öÉÏÊ÷²Ù×÷
+	//å°†æ–°çš„æ–‡ä»¶æè¿°ç¬¦åšä¸Šæ ‘æ“ä½œ
 	int SocketFd_Add(bufferevent* buffer, SOCKETS _FD);
 
-	//½«ÎÄ¼şÃèÊö·ûÏÂÊ÷
+	//å°†æ–‡ä»¶æè¿°ç¬¦ä¸‹æ ‘
 	int SocketFd_Del(bufferevent* buffer, SOCKETS _FD);
 
-	//ÊÍ·Å×ÊÔ´×é¼ş
+	//é‡Šæ”¾èµ„æºç»„ä»¶
 	int SyinxAdapterResource_Free();
 
-	//¸üĞÂ¹²ÏíÄÚ´æ
+	//æ›´æ–°å…±äº«å†…å­˜
 	int SyinxAdapterResource_UpdateShm();
-private:/*°ó¶¨(mRes+Task ×ÊÔ´¹ÜÀíÆ÷°ó¶¨ÈÎÎñ¹ÜÀíÆ÷)*/
-	//°ó¶¨ÈÎÎñÀà
+private:/*ç»‘å®š(mRes+Task èµ„æºç®¡ç†å™¨ç»‘å®šä»»åŠ¡ç®¡ç†å™¨)*/
+	//ç»‘å®šä»»åŠ¡ç±»
 	SyinxAdapterMission* mResTask;
-	//°ó¶¨Ïß³ÌÀà
+	//ç»‘å®šçº¿ç¨‹ç±»
 	SyinxAdapterPth* mResPth;
-	//°ó¶¨ºËĞÄ¿ò¼ÜÀà
+	//ç»‘å®šæ ¸å¿ƒæ¡†æ¶ç±»
 	SyinxKernel* mSyinx;
 private:
 
-	//Ïß³ÌÊı(IOÊ÷)
+	//çº¿ç¨‹æ•°(IOæ ‘)
 	int PthNum;
 
 	SyinxAdapterResource(SyinxAdapterResource& _intmp) = delete;
 
-	//½«ÓÃ»§µÄÍ¨µÀ²ã¹ÒÔÚÊ÷ÉÏ
+	//å°†ç”¨æˆ·çš„é€šé“å±‚æŒ‚åœ¨æ ‘ä¸Š
 	std::multimap<bufferevent*, IChannel*> mIChannelMap;
-	
+
 };
 #endif
-
