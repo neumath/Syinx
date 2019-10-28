@@ -1,7 +1,0 @@
-
-class SyinxMySQL
-{
-	SyinxMySQL() {}
-	~SyinxMySQL() {}
-
-};
