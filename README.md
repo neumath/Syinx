@@ -8,7 +8,7 @@
 
 [![Syinx](https://github.com/OnlyloveSY/ResPic/blob/master/screenshots/goto.svg)](https://www.jianshu.com/u/3f6b82b7329d)
 
-
+[![Syinx](https://github.com/OnlyloveSY/ResPic/blob/master/screenshots/bhu.svg)](https://www.zhihu.com/people/lee-78-27-78/activities)
 
 基于libevent的轻量级高并发适用于游戏业务的服务器,利用任务队列的线程池模式以及事件队列来对业务进行高并发处理
 
@@ -24,7 +24,7 @@ Libevent-based lightweight high concurrency is applicable to the game business s
 
 # 前言
 
-​		自己一个人写一个小的游戏框架实在是难,自己测试,自己解决bug,以及新的概念引用学习等问题都会导致开发时间被拉得过于长,我读过一些开源的服务器框架,他们写的都非常棒,比如Zinx C/C++版本,以及Zinx Golang版本(还在学习中),我觉得框架就应该是学习起来简单,使用者调用一些函数就可以完成整个基本功能,而不是基于某个别人写好的开发,那就成了二次开发,或者是自己写的库了
+​		自己一个人写一个小的游戏框架实在是难,自己测试,自己解决bug,以及新的概念引用学习等问题都会导致开发时间被拉得过于长,我读过一些开源的服务器框架,他们写的都非常棒,比如Zinx C/C++版本,以及Zinx Golang版本,我觉得框架就应该是学习起来简单,使用者调用一些函数就可以完成整个基本功能,而不是基于某个别人写好的开发,那就成了二次开发,或者是自己写的库了
 
 ​		我也想把服务器写的跟框架一样,简单,通过函数调用完成大量功能,就比如Golang语言(正在初学中),虽然他的语法我觉得比较怪异,作为C/C++工程师来说就觉得这完全跟我们C/C++反着来,但是其实非常简单,我感觉他的package包真的强大,通过函数调用完成的大量功能,比如
 
@@ -41,13 +41,15 @@ Libevent-based lightweight high concurrency is applicable to the game business s
 
 **编译与测试**
 
-`cmake .`
+找到bin目录的Clickme.sh脚本文件
 
-`make`
+`./Clickme.sh`             测试可能需要的动态库文件,成功生成一个main.cpp文件
 
-`./Syinx  run`
+`cmake .`                       执行cmake生成make文件
 
-`nc   你的IP地址   8855`
+`make`                             执行make进行编译,如果没有执行第一步请回滚重新开始
+
+该框架无需安装
 
 **命令参数**
 
@@ -97,7 +99,9 @@ Libevent-based lightweight high concurrency is applicable to the game business s
 
 ​	时间触发的事件任务以及周期触发事件均可以被设置,这也是大部分网络游戏在使用的一个固定频率任务处理的游戏事件轮询机制
 
-​	每一个轮子即节点, 都会绑定一个queue或者是list, 你可以将某个你想要指定时间触发,或者是固定时间周期触发的任务挂在某个节点的queue或者list上,每次轮询时候都会来检测并且做相应处理,该完成什么样的任务将由你来决定
+​	每一个轮子即节点, 都会绑定一个queue或者是list, 你可以将某个你想要指定时间触发,或者是固定时间周期触发的任务挂在某个节点的queue或者list上,每次轮询时候都会来检测并且做相应处理,该完成什么样的任务将由你来决定	
+
+​	在Syinx中可以创建一个固定周期(sec+msec为一周期)运行的时间驱动轮秒与毫秒可以自行设定,且时间驱动轮不为单例模式,可以初始化多次
 
 ### 	三: 常见的游戏数据流协议
 
@@ -155,38 +159,46 @@ int main()
 
 ```c++
 
-#include "Syinx.h"
-#include "SyTaskAdapter.h"
-
+#include "Syinx/Syinx.h"
+#include "Syinx/SyTaskAdapter.h"
 #include <iostream>
 using namespace std;
 
-//用户可以指定该构造函数需要初始化或者用来创建哪些东西
+//通道层在客户端连接到服务器时会调用一次该构造函数
 IChannel::IChannel()
 {
+
 }
-//用户可以指定该析构构造函数需要释放哪些东西
+//当客户端释放连接时该析构函数会被调用一次
 IChannel::~IChannel()
 {
+
 }
 
-/*
-@  -用户需要在该任务流程处理函数内写入你所后续规划的其他函数
-@每当客户端发来数据时都会调用该函数
-*/
+
+//在默认的线程处理函数之后会自动调用IChannelWork函数,用来给玩家指定任务队列加入其它自定义任务或者lua脚本
+int IChannel::ICannelWork()
+{
+
+}
+//void* IChannelTaskProcessing(void* arg) arg为传入参数,当客户端发来一个数据报文时会调用该函数,该函数被自动压入任务队列
+//任务队列会在线程池里被处理
+
 void* IChannelTaskProcessing(void* arg)
 {
 	auto mIC = (IChannel*)arg;
-	string str;
-	mIC->RecvAllDataToString(str);
-	cout << "str:"<<str << endl;
+
 }
 int main(int argc, char* argv[])
 {
-	SyinxKernelWork a( argc, argv);
-	
-	return a.SyinxKernelExit;
+	SyinxKernelWork sy(argc, argv);
+                                   
+
+                                   
+	sy.SyinxWork();
+	return sy.SyinxKernelExit;
 }
+
 
 ```
 
@@ -200,7 +212,7 @@ int main(int argc, char* argv[])
 	@arg:不以任何协议格式将全部数据读取string并清空占存区
 	@成功返回读取到的数据长度,失败返回-1 
 	*/
-	int RecvAllDataToString(std::string &arg);
+	int RecvAllDataFromString(std::string &arg);
 
 	/*
 	@   -以协议的格式接收数据到string   len  type  values
@@ -212,7 +224,7 @@ int main(int argc, char* argv[])
 	@返回0时说明无剩余数据可读
 	@失败返回-1
 	*/
-	int RecvValuesToString(unsigned int* _OutLen, unsigned int* _OutType, std::string& _OutStr);
+	int RecvValuesFromString(unsigned int* _OutLen, unsigned int* _OutType, std::string& _OutStr);
 
 
 	/*
@@ -315,6 +327,18 @@ Syzinx -dev 0.1.8   该版本已经能够被使用或者用来学习
 ​			添加读写配置文件
 
 ​			--后续将为计时器事件队列
+
+Syzinx -dev 0.2.0
+
+​			基本功能均完成
+
+​			修复log文件写入问题
+
+​			修复数据库连接问题
+
+​			线程池,数据库,连接池,事件计时器均可以单独拿出来使用
+
+
 
 ​		
 
