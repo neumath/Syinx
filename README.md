@@ -16,7 +16,7 @@ Libevent-based lightweight high concurrency is applicable to the game business s
 
 > 版本:
 >
-> C/C++:0.1.8
+> C/C++:0.2.0
 >
 > Golang:NULL
 >
