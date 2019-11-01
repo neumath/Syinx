@@ -46,7 +46,8 @@ Libevent-based lightweight high concurrency is applicable to the game business s
 `cmake .`                       执行cmake生成make文件
 
 `make`                             执行make进行编译,如果没有执行第一步请回滚重新开始
-`修改配置文件设置IP地址以及端口号通过nc ip地址  端口号`   连接测试
+
+`nc ip 端口`               连接测试,ip地址以及端口为你设置的配置文件端口,当前版本框架ip为172.0.0.0 无法修改
 
 该框架无需安装
 
