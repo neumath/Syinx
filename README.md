@@ -46,6 +46,7 @@ Libevent-based lightweight high concurrency is applicable to the game business s
 `cmake .`                       执行cmake生成make文件
 
 `make`                             执行make进行编译,如果没有执行第一步请回滚重新开始
+`修改配置文件设置IP地址以及端口号通过nc ip地址  端口号`   连接测试
 
 该框架无需安装
 
