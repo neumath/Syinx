@@ -1,4 +1,4 @@
-
+#!/bin/bash
 _var1_event=0
 _var2_pthread=0
 _var3_mysqlclient=0
