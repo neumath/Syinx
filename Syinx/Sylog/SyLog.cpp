@@ -1,19 +1,11 @@
-﻿#define _CRT_SECURE_NO_WARNINGS
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <stdarg.h>
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
-#include <unistd.h>
+﻿#include "../Syinx/SyInc.h"
 //#include <unistd.h>
 #include "SyLog.h"
 #include <string>
 using namespace std;
 
 SyinxLog SyinxLog::mLog;
+
 const string SYINX_DEBUG_FILE = "Syderlog.log";
 const int SYINX_MAX_STRING_LEN = 10240;
 
@@ -51,7 +43,7 @@ int SyinxLog::SYINX_Error_OpenFile(int* pf)
 #else
 	sprintf(fileName, "./log/%s", SYINX_DEBUG_FILE.data());
 #endif
-#if 1
+#ifdef __linux__
 	* pf = open(fileName, O_WRONLY | O_CREAT | O_APPEND, 0666);
 	if (*pf < 0)
 	{
@@ -111,7 +103,7 @@ void SyinxLog::SYINX_Error_Core(const char* file, int line, int level, int statu
 	{
 		return;
 	}
-#if 1
+#ifdef __linux__
 	//写入LOG文件
 	write(pf, str, strLen);
 	//IC_Log_Error_WriteFile(str);

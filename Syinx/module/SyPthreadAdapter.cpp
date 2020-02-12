@@ -1,50 +1,41 @@
-#include <unistd.h>
-#include <vector>
-#include <map>
-#include <iostream>
-#include <sys/shm.h>
-#include <sys/types.h>
-#include <sys/ipc.h>
+#include "../Syinx/SyInc.h"
+#include "SyPthreadPool.h"
 #include "../Syinx/Syinx.h"
-#include "../Syinx/SyAdapter.h"
 #include "../Syinx/SyResAdapter.h"
 #include "SyPthreadPool.h"
 #include "SyPthreadAdapter.h"
-SyinxAdapterPth::SyinxAdapterPth()
+SyinxAdapterPth::SyinxAdapterPth(uint32_t PthPoolNum, uint32_t TaskMaxNum) :m_PthPoolNum(PthPoolNum), m_TaskMaxNum(TaskMaxNum)
 {
-
+	m_sSyinxPthPool = nullptr;
 }
 
 SyinxAdapterPth::~SyinxAdapterPth()
 {
-	//SyinxPthreadPool::threadpool_destroy(mSyinxPthPool);
+	m_PthPoolNum = 0;
+	m_TaskMaxNum = 0;
+
+	m_sSyinxPthPool = nullptr;
 }
 
 
-
-/*-----------------------------次要线程函数----------------------------*/
-
-int SyinxAdapterPth::SyinxAdapterPth_Init()
+bool SyinxAdapterPth::SyinxAdapterPth_Init()
 {
-	this->mSyinxPthPool = SyinxPthreadPool::threadpool_create(this->PthPoolNum, this->TaskMaxNum, 0);
-	if (this->mSyinxPthPool == NULL)
+	m_sSyinxPthPool = g_SyinxPthPool.threadpool_create(m_PthPoolNum, m_TaskMaxNum);
+	if (m_sSyinxPthPool == nullptr)
 	{
-		return -1;
+		return false;
 	}
-	else
-	{
-		return 1;
-	}
+	return true;
 }
 
-int SyinxAdapterPth::SyinxAdapter_Pth_Add(void* (*taskfunc)(void*), void* arg)
+uint32_t SyinxAdapterPth::SyinxAdapterPth_Add(void* (*taskfunc)(void*), void* arg)
 {
-	return SyinxPthreadPool::threadpool_add(SyinxPthreadPool::PthPool, taskfunc, arg, 0);
+	return g_SyinxPthPool.threadpool_add(g_SyinxPthPool.GetPthreadPool(), taskfunc, arg);
 }
 
 
 
-int SyinxAdapterPth::SyinxAdapter_Pth_destroy()
+uint32_t SyinxAdapterPth::SyinxAdapterPth_destroy()
 {
-	return SyinxPthreadPool::threadpool_destroy(this->mSyinxPthPool, 0);
+	return g_SyinxPthPool.threadpool_destroy(g_SyinxPthPool.GetPthreadPool());
 }

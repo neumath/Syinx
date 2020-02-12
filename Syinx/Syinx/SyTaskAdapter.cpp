@@ -1,94 +1,91 @@
-#include <iostream>
-#include <cstring>
-#include <map>
-#include <event2/event.h>
-#include <event2/bufferevent.h>
-#include <event2/listener.h>
+#include "../Syinx/SyInc.h"
 #include "Syinx.h"
-#include "SyAdapter.h"
-#include "SyTaskAdapter.h"
 #include "SyResAdapter.h"
+#include "SyTaskAdapter.h"
 #include "../Sylog/SyLog.h"
-#ifdef SYINXMOD_ADD_MYSQL
-#include <mysql/mysql.h>
-#else
-#endif 
+#include "../Sylog/easylogging++.h"
 
-
-
-int IChannel::RecvAllDataFromString(std::string& arg)
+IChannel::IChannel()
 {
-	if (this->StrByte->_InStr.size() <= 0 || this->StrByte->_InStr.size() != StrByte->_InSize)
-	{
-		SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, -1, "Buffer is empty : _Instr size 0");
-		return -1;
-	}
-	int _Size = this->StrByte->_InStr.size();
-	arg = this->StrByte->_InStr;
-
-	this->StrByte->_InStr.erase(0, arg.size());
-	this->StrByte->_InSize = 0;
-	return _Size;
+	IChStatus = 0;
+	m_ClientID = 0;
+	m_buffer = nullptr;
+	m_Socket = 0;
+	m_pPlayer = nullptr;
+	DoNotBindParse = false;
+	m_ClientBuffer.clear();
 }
 
-//ÊåâÂçèËÆÆËØªÂèñ
-int IChannel::RecvValuesFromString(unsigned int* _OutLen, unsigned int* _OutType, std::string& _OutStr)
+IChannel::~IChannel()
 {
-	if (this->StrByte->_InStr.size() >= 8)
-	{
-		unsigned int ValuesLen =
-			this->StrByte->_InStr[0] |
-			this->StrByte->_InStr[1] << 8 |
-			this->StrByte->_InStr[2] << 16 |
-			this->StrByte->_InStr[3] << 24;
-
-		unsigned int ValuesType =
-			this->StrByte->_InStr[4] |
-			this->StrByte->_InStr[5] << 8 |
-			this->StrByte->_InStr[6] << 16 |
-			this->StrByte->_InStr[7] << 24;
-
-		_OutStr = StrByte->_InStr.substr(8, ValuesLen);
-		*_OutLen = ValuesLen;
-		*_OutType = ValuesType;
-
-		this->StrByte->_InStr.erase(0, 8 + ValuesLen);
-		this->StrByte->_InSize -= (8 + ValuesLen);
-		return BufferSucc;
-	}
-	else if (StrByte->_InStr.size() <= 8)
-	{
-		StrByte->_InStr.clear();
-		return BufferEnd;
-	}
-	else if (!StrByte->_InStr.size())
-	{
-		//Â¶ÇÊûúÊé•ÂèóÁöÑÊòØ‰∏™Êó†Êï∞ÊçÆÂåÖÁöÑÂåÖÂàôËøîÂõûerr end
-		return BufferNull;
-	}
+	IChStatus = 0;
+	m_ClientID = 0;
+	m_buffer = nullptr;
+	m_pPlayer = nullptr;
+	m_Socket = 0;
+	DoNotBindParse = false;
+	m_ClientBuffer.clear();
 }
 
-int IChannel::SendAllDataToString(std::string& _InStr)
+
+bool IChannel::RecvValuesFromString(string& _InStr, uint32_t& _OutLen, uint32_t& _OutType, std::string& _OutStr)
 {
-	auto buffer = this->mICMsg->buffer;
-	char* buf = const_cast<char*>(_InStr.c_str());
-	if (strlen(buf) == _InStr.size())
+	if (_InStr.size() >= 8)
 	{
-		int iRet = bufferevent_write(buffer, buf, strlen(buf));
-		if (iRet < 0)
+		unsigned int ValuesLen = 0;
+		unsigned int ValuesType = 0;
+		if (!g_pSyinx.GetEndian())
 		{
-			return 0;
-		}
-	}
+			ValuesLen =
+				_InStr[0] |
+				_InStr[1] << 8 |
+				_InStr[2] << 16 |
+				_InStr[3] << 24;
 
-	return strlen(buf);
+			ValuesType =
+				_InStr[4] |
+				_InStr[5] << 8 |
+				_InStr[6] << 16 |
+				_InStr[7] << 24;
+		}
+		else
+		{
+			ValuesLen = _InStr[0] |
+				_InStr[1] |
+				_InStr[2] |
+				_InStr[3];
+			ValuesType = _InStr[4] |
+				_InStr[5] |
+				_InStr[6] |
+				_InStr[7];
+		}
+
+		_OutStr = _InStr.substr(8, ValuesLen);
+		_OutLen = ValuesLen;
+		_OutType = ValuesType;
+
+		_InStr.erase(0, 8 + ValuesLen);
+		return true;
+	}
+	else if (_InStr.size() <= 8)
+	{
+		_InStr.clear();
+		//∞¸≤ª»´
+		return false;
+	}
+	return false;
 }
 
-int IChannel::SendValuesToString(unsigned int _InLen, unsigned int _InType, std::string& _InStr)
+bool IChannel::RecvClientPack(uint32_t& _InLen, uint32_t& _InType, std::string& _InStr)
 {
+	LOG(INFO) << "Recv Pack";
+	return true;
+}
 
 
-	auto buffer = this->mICMsg->buffer;
+
+bool IChannel::SendValuesToString(uint32_t _InLen, uint32_t _InType, std::string& _InStr)
+{
 	std::string _SendStr;
 	_SendStr.reserve(_InLen + 8);
 	int _Num = 0;
@@ -106,54 +103,121 @@ int IChannel::SendValuesToString(unsigned int _InLen, unsigned int _InType, std:
 		_SendStr.push_back((_InType >> 24) & 0xff);
 
 		_SendStr.append(_InStr);
-		int iRet = bufferevent_write(buffer, _SendStr.c_str(), _SendStr.size());
+		int iRet = bufferevent_write(m_buffer, _SendStr.c_str(), _SendStr.size());
 		if (iRet < 0)
 		{
-			return iRet;
+			return false;
 		}
-
+		return true;
 	}
 	else
-		return 0;
+		return false;
 }
 
-
-
-int IChannel::ICannel_Init(IChannelMsg* Info)
-{
-	if (Info == NULL)
-	{
-		SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, -1, "Info is NULL ");
-		return -1;
-	}
-	this->mICMsg = Info;
-
-	this->StrByte = new StringByte;
-	return 0;
-}
-
-void IChannel::IChannel_free()
+void IChannel::SetupFrameInputFunc()
 {
 
-	if (this->StrByte != NULL)
-	{
-		delete this->StrByte;
-		this->StrByte == nullptr;
-	}
-	if (this->mICMsg != NULL)
-	{
-		delete this->mICMsg;
-		this->mICMsg = nullptr;
-	}
+	BindParse(&IChannel::RecvValuesFromString, &IChannel::RecvClientPack);
 }
 
-int IChannel::DatatoInStrByte(char* buf)
+void IChannel::GetClientFrameOnBuffer(std::string& _instr)
 {
-	if (buf == NULL)
-	{
-		SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, -1, "buf is null ");
-		return -1;
-	}
-	this->StrByte->_InStr = buf;
-	return 0;
+	m_ClientBuffer.push_back(_instr);
 }
+
+inline bool IChannel::GetWhetherBindParseFunc()
+{
+	return DoNotBindParse;
+}
+
+bool IChannel::Initialize()
+{
+	SetupFrameInputFunc();
+	if (!GetWhetherBindParseFunc())
+	{
+		//√ª”–∞Û∂®
+		LOG(ERROR) << "Not Bind Parse";
+		return false;
+	}
+
+	/* ‘Ÿ¥ŒÃÌº”≥ı ºªØµƒ∫Ø ˝ */
+	return true;
+}
+
+int IChannel::OnClientConnect(int _fd, bufferevent* _buffer, int _id)
+{
+	m_Socket = _fd;
+	if (nullptr != _buffer)
+	{
+		m_buffer = _buffer;
+	}
+
+	m_ClientID = _id;
+	return 1;
+}
+
+void IChannel::OnStatusDoAction()
+{
+	for (auto Iter : m_ClientBuffer)
+	{
+		uint32_t PackLen = 0;
+		uint32_t PackType = 0;
+		string OutStr;
+		while ((this->*ParseFunc)(Iter, PackLen, PackType, OutStr))
+		{
+			(this->*CallFunc)(PackLen, PackType, OutStr);
+		}
+	}
+	m_ClientBuffer.clear();
+}
+
+bool IChannel::Clear()
+{
+	m_Socket = 0;
+	IChStatus = CLIENT_LOGOUT;
+	if (nullptr !=m_buffer)
+	{
+		bufferevent_free(m_buffer);
+		m_buffer = nullptr;
+	}
+	m_ClientID = 0;
+	m_ClientBuffer.clear();
+
+	/* ‘Ÿ¥ŒÃÌº” */
+	return true;
+}
+
+
+int IChannel::GetSocket() const
+{
+	return m_Socket;
+}
+
+bufferevent* IChannel::GetBuffer()
+{
+	return m_buffer != nullptr ? m_buffer : nullptr;
+}
+
+int IChannel::GetUniqueID() const
+{
+	return m_ClientID;
+}
+
+CPlayer* IChannel::GetCPlayer()
+{
+	return m_pPlayer;
+}
+
+void IChannel::BindParse(bool(IChannel::* RecvBufferParse)(std::string& _Instr, uint32_t& _OutLen, uint32_t& _OutType, std::string& _OutStr), bool(IChannel::* Callalbe)(uint32_t& _InLen, uint32_t& _InType, std::string& _InStr))
+{
+	if (RecvBufferParse != NULL && Callalbe != NULL)
+	{
+		ParseFunc = RecvBufferParse;
+		CallFunc = Callalbe;
+		DoNotBindParse = true;
+		return;
+	}
+	DoNotBindParse = false;
+	return;
+}
+

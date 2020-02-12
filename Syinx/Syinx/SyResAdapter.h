@@ -1,61 +1,39 @@
 #ifndef _SYRESADAPTER_H_
 #define _SYRESADAPTER_H_
+#include <unordered_map>
+#include <queue>
+
+class SyinxKernel;
 class SyinxAdapter;
 class SyinxAdapterPth;
-class SyinxKernel;
 class SyinxLog;
-#include <vector>
+class IChannel;
+class CPlayer;
+
 #define SOCKETS	                                         int
-#define BUFFSIZE                                         256
-struct SyinxConfMsg;
-class SyinxConfig;
-//èµ„æºé€‚é…å™¨
-class SyinxAdapterResource : public SyinxAdapter
+#define BUFFSIZE										 256
+
+class SyinxAdapterResource
 {
-
-	friend void SyinxKernel_Listen_CB(struct evconnlistener* listener, evutil_socket_t fd, struct sockaddr* sock, int socklen, void* arg);
-	friend class SyinxKernel;
-	friend class SyinxAdapterPth;
-	friend class SyinxAdapterMission;
-	friend class IChannel;
 	friend void SyinxKernel_Event_Cb(struct bufferevent* bev, short what, void* ctx);
+private:
+	//½«ÓÃ»§µÄÍ¨µÀ²ã¹ÒÔÚÊ÷ÉÏ
+	std::list<IChannel*>				 m_listConnectClient;
+	std::queue<IChannel*>				 m_queueILoop;
+	size_t								m_IChannelNum;
 public:
-	SyinxAdapterResource();
-	SyinxAdapterResource(int PthNum) :PthNum(PthNum) {}
+	SyinxAdapterResource(int IChNum);
 	~SyinxAdapterResource();
+	bool Initialize();
+	bool Close();
 
-private:
+	//½«ĞÂÁ¬½ÓµÄ¿Í»§¶Ë½øĞĞ·ÖÅä
+	bool AllocationIChannel(bufferevent* buffer, SOCKETS _FD);	//·ÖÅäÒ»¸öIChannel
 
-	//å°†æ–°è¿æ¥çš„å®¢æˆ·ç«¯è¿›è¡Œåˆ†é…
-	int SyinxAdapterResource_AllotClient(bufferevent* buffer, SOCKETS _FD);
+	bool SocketFdAdd(IChannel* ICh);							//½«ĞÂµÄÎÄ¼şÃèÊö·û×öÉÏÊ÷²Ù×÷
+	bool SocketFdDel(IChannel* ICh);							//½«ÎÄ¼şÃèÊö·ûÏÂÊ÷
 
-	//å°†æ–°çš„æ–‡ä»¶æè¿°ç¬¦åšä¸Šæ ‘æ“ä½œ
-	int SocketFd_Add(bufferevent* buffer, SOCKETS _FD);
-
-	//å°†æ–‡ä»¶æè¿°ç¬¦ä¸‹æ ‘
-	int SocketFd_Del(bufferevent* buffer, SOCKETS _FD);
-
-	//é‡Šæ”¾èµ„æºç»„ä»¶
-	int SyinxAdapterResource_Free();
-
-	//æ›´æ–°å…±äº«å†…å­˜
-	int SyinxAdapterResource_UpdateShm();
-private:/*ç»‘å®š(mRes+Task èµ„æºç®¡ç†å™¨ç»‘å®šä»»åŠ¡ç®¡ç†å™¨)*/
-	//ç»‘å®šä»»åŠ¡ç±»
-	SyinxAdapterMission* mResTask;
-	//ç»‘å®šçº¿ç¨‹ç±»
-	SyinxAdapterPth* mResPth;
-	//ç»‘å®šæ ¸å¿ƒæ¡†æ¶ç±»
-	SyinxKernel* mSyinx;
-private:
-
-	//çº¿ç¨‹æ•°(IOæ ‘)
-	int PthNum;
-
-	SyinxAdapterResource(SyinxAdapterResource& _intmp) = delete;
-
-	//å°†ç”¨æˆ·çš„é€šé“å±‚æŒ‚åœ¨æ ‘ä¸Š
-	std::multimap<bufferevent*, IChannel*> mIChannelMap;
+	void GameServerDoAction();								//´¦ÀíËùÓĞÖ¡
 
 };
 #endif

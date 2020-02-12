@@ -1,574 +1,478 @@
-#include "Syinx.h"
-#include "SyAdapter.h"
-#include "SyTaskAdapter.h"
+#include "SyInc.h"
 #include "../module/SyPthreadAdapter.h"
-#include "../module/SyPthreadPool.h"
 #include "../module/SyPthreadPool.h"
 #include "../Sylog/SyLog.h"
 #include "SyResAdapter.h"
-#include "SyConfig.h"
-
-#include <sys/shm.h>
-#include <sys/ipc.h>
-#include <sys/un.h>
-#include <stdio.h>
+#include "../Sylog/easylogging++.h"
+#include "SyTaskAdapter.h"
+#include "Syinx.h"
 
 
+#include "../module/rapidjson/document.h"
+#include "../module/rapidjson/stringbuffer.h"
+#include "../module/rapidjson/prettywriter.h"
+using namespace rapidjson;
+using rapidjson::Document;
+using rapidjson::Value;
 using namespace std;
 
-SyinxKernel* SyinxKernel::mSyinx = nullptr;
 
+SyinxKernel& g_pSyinx = SyinxKernel::MakeSingleton();
 
-const char* LogEvent_Event = "EVENT !";
-const char* LogEvent_Warning = "WARNING !";
-const char* LogEvent_Error = "ERROR !";
+uint64_t	g_nGameServerSecond = 0;
 
-//listenÂõûË∞ÉÂáΩÊï∞‰º†ÂÖ•ÁöÑÂèÇÊï∞
-struct  SyinxDeliver
+tm	g_tmGameServerTime;
+SyinxKernel& SyinxKernel::MakeSingleton()
 {
-
-	//baseÂè•ÊüÑ
-	struct event_base* iSyinxBase;
-
-	//‰øùÂ≠òÁî®‰∫éÁõëÂê¨Â•óÊé•Â≠óÁöÑevconnlistener
-	struct evconnlistener* iSyinxListen;
-
-	//Ê†∏ÂøÉÊ°ÜÊû∂Âú∞ÂùÄ
-	SyinxKernel* iSyinx;
-};
+	static SyinxKernel syinx;
+	return syinx;
+}
 
 SyinxKernel::SyinxKernel()
 {
+	m_Port = 0;
+	m_ClientContentNum = 0;
+	m_PthPoolNum = 0;
+	m_TaskNum = 0;
+	m_TimerSec = 0;
+	m_endian = 0;
+	mSyinxBase = nullptr;
+	mSyinxListen = nullptr;
+	mSyPth = nullptr;
+	mSyResource = nullptr;
+	mUsePthreadPool = false;
+	m_DBServer = nullptr;
+	m_nWorkStatus = SYINX_LINK_CLOSE;
+
+	memset(m_SyinxStatusFunc, 0, sizeof(m_SyinxStatusFunc));
+	m_SyinxStatusFunc[SYINX_LINK_WORK] = &SyinxKernel::OnStatusDoAction;
+	m_SyinxStatusFunc[SYINX_LINK_CLOSE] = &SyinxKernel::OnStatusDoClose;
 
 }
 SyinxKernel::~SyinxKernel()
 {
+	m_Port = 0;
+	m_ClientContentNum = 0;
+	m_PthPoolNum = 0;
+	m_TaskNum = 0;
+	m_TimerSec = 0;
+	m_endian = 0;
+	mSyinxBase = nullptr;
+	mSyinxListen = nullptr;
+	mSyPth = nullptr;
+	mSyResource = nullptr;
+	m_DBServer = nullptr;
+	m_nWorkStatus = SYINX_LINK_CLOSE;
+	SyinxKernel_Close();
 }
 
-//ËØªÂá∫ÂõûË∞É
+//∂¡≥ˆªÿµ˜
 void SyinxKernel_Recv_Cb(struct bufferevent* bev, void* ctx)
 {
-	auto mIC = (IChannel*)ctx;
-	char _buff[BUFFSIZE] = { 0 };
-	int iRet = bufferevent_read(bev, _buff, BUFFSIZE);
-	if (iRet < 0)
-	{
+	auto ICh = GETICHANNEL;
+	if (ICh == nullptr)
 		return;
-	}
-	std::string _tmp(_buff, iRet);
-	mIC->StrByte->_InStr = _tmp;
-	mIC->StrByte->_InSize = iRet;
 
-	try
-	{
-		iRet = SyinxAdapterPth::SyinxAdapter_Pth_Add(IChannelTaskProcessing, (void*)mIC);
-		throw(iRet);
-	}
-	catch (int RetErr)
-	{
-		switch (RetErr)
-		{
-		case Success:
-		{
-			break;
-		}
-		case MutexInitErr:
-		{
-			SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, MutexInitErr, "SyinxAdapter_Pth_Add MutexInitErr");
-			break;
-		}
-		case CondInitErr:
-		{
-			SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, CondInitErr, "SyinxAdapter_Pth_Add CondInitErr");
-			break;
-		}
+	char _buffer[READBUFFER] = { 0 };
+	int iRet = bufferevent_read(bev, _buffer, READBUFFER);
+	if (iRet < 0)
+		return;
+	string _str(_buffer, iRet);
+	ICh->GetClientFrameOnBuffer(_str);
 
-		case LockErr:
-		{
-			SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, LockErr, "SyinxAdapter_Pth_Add LockErr");
-			break;
-		}
-		case UnLockErr:
-		{
-			SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, UnLockErr, "SyinxAdapter_Pth_Add UnLockErr");
-			break;
-		}
-
-		case CondWaitErr:
-		{
-			SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, CondWaitErr, "SyinxAdapter_Pth_Add CondWaitErr");
-			break;
-		}
-
-		case CondSignalErr:
-		{
-			SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, CondSignalErr, "SyinxAdapter_Pth_Add CondSignalErr");
-			break;
-		}
-		case VarIsNULL:         /*‰º†ÈÄíÂèòÈáè‰∏∫Á©∫*/
-		{
-			SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, VarIsNULL, "SyinxAdapter_Pth_Add VarIsNULL");
-			break;
-		}
-		case QueueIsMax:        /*‰ªªÂä°ÈòüÂàóÊª°‰∫Ü*/
-		{
-			SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, QueueIsMax, "SyinxAdapter_Pth_Add VarIsNULL");
-			break;
-		}
-		case Shutdown:          /*ÂÖ≥Èó≠*/
-		{
-			SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, Shutdown, "Pthread_Pool Shutdown");
-			break;
-		}
-		default:
-			break;
-		}
-	}
-	mIC->ICannelWork();
 }
-//ÂÜô‰∫ã‰ª∂ÂõûË∞É
+//–¥ ¬º˛ªÿµ˜
 void SyinxKernel_Send_Cb(struct bufferevent* bev, void* ctx)
 {
-	auto mIC = (IChannel*)ctx;
-	cout << mIC->mICMsg->Socket << "Âá∫Âèë‰∫ÜÂõûË∞É" << endl;
+
 }
 
-//‰∫ã‰ª∂ÂõûË∞É
+// ¬º˛ªÿµ˜
 void SyinxKernel_Event_Cb(struct bufferevent* bev, short what, void* ctx)
 {
-	auto mIC = (IChannel*)ctx;
-	if (what & BEV_EVENT_EOF) // ClientÁ´ØÂÖ≥Èó≠ËøûÊé• 
+	auto mIC = GETICHANNEL;
+	auto Res = g_pSyinx.GetResource();
+	if (what & BEV_EVENT_EOF) // Client∂Àπÿ±’¡¨Ω” 
 	{
-		SyinxKernel::mSyinx->mSyResource->SocketFd_Del(bev, 0);
+		Res->SocketFdDel(mIC);
 	}
-	else if (what & BEV_EVENT_ERROR) // ËøûÊé•Âá∫Èîô 
+	else if (what & BEV_EVENT_ERROR) // ¡¨Ω”≥ˆ¥Ì 
 	{
-
+		Res->SocketFdDel(mIC);
 	}
-	else if (what & BEV_EVENT_WRITING)//ÂÜôÂÖ•Êó∂ÂèëÁîüÂÅöÈîôËØØ
+	else if (what & BEV_EVENT_WRITING)//–¥»Î ±∑¢…˙◊ˆ¥ÌŒÛ
 	{
-		SyinxKernel::mSyinx->mSyResource->SocketFd_Del(bev, 0);
+		Res->SocketFdDel(mIC);
 	}
 }
 
-//Â¶ÇÊûúÊúâÂÆ¢Êà∑Á´ØËøûÊé•
+void SIG_HANDLE(int Sig)
+{
+	switch (Sig)
+	{
+	case SIGINT:
+		g_pSyinx.SyinxKernel_Close();
+		break;
+#ifdef __linux__
+	case SIGQUIT:
+		g_pSyinx.SyinxKernel_Close();
+		break;
+#endif
+	default:
+		break;
+	}
+}
+
+
+
+//»Áπ˚”–øÕªß∂À¡¨Ω”
 void SyinxKernel_Listen_CB(struct evconnlistener* listener, evutil_socket_t fd, struct sockaddr* sock, int socklen, void* arg)
 {
-	SyinxDeliver* poSyinxDeliver = (SyinxDeliver*)arg;
-	if (NULL == poSyinxDeliver)
+	int iRet = 0;
+	auto _base = g_pSyinx.GetEventBase();
+	if (nullptr == _base)
 	{
+		//log
 		return;
 	}
-
-	struct event_base* poSyinxBase = poSyinxDeliver->iSyinxBase;
-
-	//Ê°ÜÊû∂Âú∞ÂùÄ
-	SyinxKernel* mSyinx = poSyinxDeliver->iSyinx;
-
 	struct bufferevent* buffer = NULL;
-	buffer = bufferevent_socket_new(poSyinxBase, fd, BEV_OPT_CLOSE_ON_FREE);
-	if (buffer == NULL)
+	buffer = bufferevent_socket_new(_base, fd, BEV_OPT_CLOSE_ON_FREE);
+	if (nullptr == buffer)
 	{
-		SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, ClientConErr, "bufferevent_socket_new is failed");
+		LOG(ERROR) << "bufferevent_socket_new is failed";
+		return;
 	}
-	char buf[BUFSIZ] = { 0 };
-
-	sprintf(buf, "New Client is connect : [%d]", fd);
-	SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::INFO, SyinxLog::INFO, buf);
-
-	//Â∞ÜÂ∞ÜÊñ∞Êù•ÁöÑÂÆ¢Êà∑Á´ØÂßîÊâòËµÑÊ∫êÁÆ°ÁêÜÂô®Êù•ÁÆ°ÁêÜ
-	int iRet = mSyinx->mSyResource->SyinxAdapterResource_AllotClient(buffer, fd);
-
+	
+	//Ω´Ω´–¬¿¥µƒøÕªß∂ÀŒØÕ–◊ ‘¥π‹¿Ì∆˜¿¥π‹¿Ì
+	auto res = g_pSyinx.GetResource();
+	res->AllocationIChannel(buffer, fd);
 	return;
 }
-int SyinxKernel::SyinxKernel_Init()
+
+bool SyinxKernel::Initialize()
 {
-	SyinxKernel::mSyinx = new SyinxKernel;
-	//ËØªÂèñÈÖçÁΩÆÊñá‰ª∂
-	SyinxConfig conf;
-	mSyinx->SyConfMsg = conf.Read_Msgconfig();
+	m_endian = JudgeSystem();
 
-	uint16_t _inPort = (uint16_t)stoi(mSyinx->SyConfMsg->Port);
-
-	if (_inPort <= 0 || _inPort >= 65535)
+	//‘Ÿ¥ŒÃÌº”≥ı ºªØƒ£øÈ
+	if (!SyinxKernelReadconfig())
 	{
-		char WriteLog[BUFFSIZE] = { 0 };
-		sprintf(WriteLog, "Port is %s : not within the scope of 0 - 65535", LogEvent_Error);
-		SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, _inPort, WriteLog);
+		LOG(ERROR) << "Read Config Failed";
+		return false;
+	}
+	if (!SyinxKernelInitAdapter())
+	{
+		LOG(ERROR) << "SyinxKernel_InitAdapter() Failed";
+		return false;
 	}
 
-
-	//ÂàùÂßãÂåñÁªìÊûÑ‰Ωì
+	//≥ı ºªØΩ·ππÃÂ
 	struct sockaddr_in _Serveraddr;
-	memset(&_Serveraddr, 0, sizeof _Serveraddr);
+	memset(&_Serveraddr, 0, sizeof(_Serveraddr));
 	_Serveraddr.sin_family = AF_INET;
-	_Serveraddr.sin_port = htons(_inPort);
+	_Serveraddr.sin_port = htons(m_Port);
 
-
-
-	//ÂàõÂª∫Âè•ÊüÑ
-	mSyinx->SyinxBase = event_base_new();
-	if (NULL == mSyinx->SyinxBase)
-	{
-		cout << "event_base_new" << endl;
-		char WriteLog[BUFFSIZE] = { 0 };
-		sprintf(WriteLog, "Create Base %s : event_base_new is failed", LogEvent_Error);
-		SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, SyinxLog::ERROR, WriteLog);
-
-		return -1;
+#ifdef WIN32
+	WORD wVersionRequested = 0;
+	WSADATA wsaData;
+	int err;
+	/* Use the MAKEWORD(lowbyte, highbyte) macro declared in Windef.h */
+	wVersionRequested = MAKEWORD(2, 2);
+	err = WSAStartup(wVersionRequested, &wsaData);
+	if (err != 0) {
+		/* Tell the user that we could not find a usable */
+		/* Winsock DLL.                                  */
+		LOG(ERROR) << "WSAStartup failed with error: %d\n" << err;
+		return false;
 	}
-	//ËÆæÁΩÆ‰º†ÈÄíÂèÇÊï∞
-	SyinxDeliver* poSyinxDeliver = new SyinxDeliver;
-	poSyinxDeliver->iSyinxBase = mSyinx->SyinxBase;
-	poSyinxDeliver->iSyinxListen = mSyinx->SyinxListen;
-	poSyinxDeliver->iSyinx = mSyinx;
 
+#endif
 
-
-	mSyinx->Server_Sockaddr.family = _Serveraddr.sin_family;
-	mSyinx->Server_Sockaddr.Prot = to_string(ntohs(_Serveraddr.sin_port));
-	mSyinx->Server_Sockaddr.sin_addr = inet_ntoa(_Serveraddr.sin_addr);
-
-
-	//ËÆæÁΩÆÁõëÂê¨
-	mSyinx->SyinxListen = evconnlistener_new_bind(mSyinx->SyinxBase, SyinxKernel_Listen_CB, (void*)poSyinxDeliver,
-		SETOPT_THREADSAFE_OR_SOCKETS_BLOCKING, 10, (const sockaddr*)& _Serveraddr, sizeof(_Serveraddr));
-	if (mSyinx->SyinxListen == NULL)
+	//¥¥Ω®æ‰±˙
+	if (!mSyinxBase)
 	{
-		char WriteLog[BUFFSIZE] = { 0 };
-		sprintf(WriteLog, "Create Base %s : evconnlistener_new_bind is failed", LogEvent_Error);
-		SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, _inPort, WriteLog);
-		return -1;
+		struct event_config* cfg = event_config_new();
+		if (cfg) {
+			struct event_config* cfg = event_config_new();
+			/*
+			To access base security , unallocable use thread call base
+			*/
+#if _WIN32
+			evthread_use_windows_threads();
+			event_config_set_flag(cfg, EVENT_BASE_FLAG_STARTUP_IOCP);
+#elif defined (__linux__)
+			event_config_set_flag(cfg, EVENT_BASE_FLAG_NOLOCK);
+#endif
+			mSyinxBase = event_base_new_with_config(cfg);
+			if (mSyinxBase == nullptr)
+			{
+				LOG(ERROR) << "event_base_new() Failed";
+				return false;
+			}
+			event_config_free(cfg);
+		}
 	}
-	//ÂàùÂßãÂåñËÆ°Êó∂Âô®
-	mSyinx->SyinxKernel_Addtimefd();
 
-	//ÂàùÂßãÂåñÈÄÇÈÖçÂô®
-	try
+	//bind
+
+	mSyinxListen = evconnlistener_new_bind(mSyinxBase, SyinxKernel_Listen_CB, nullptr,
+		SETOPT_THREADSAFE_OR_SOCKETS_BLOCKING, 10, (const sockaddr*)&_Serveraddr, sizeof(_Serveraddr));
+	if (nullptr == mSyinxListen)
 	{
-		int iRet = mSyinx->SyinxKernel_InitAdapter();
-		throw iRet;
+		LOG(ERROR) << "Create Base  : evconnlistener_new_bind is failed";
+		return false;
 	}
-	catch (int iRetErr)
+
+
+	m_nWorkStatus = SYINX_LINK_WORK;
+	return true;
+}
+
+bool SyinxKernel::SyinxKernelReadconfig()
+{
+	ifstream in;
+	string line;
+
+	string str;
+	in.open(GAME_CONFIG_PATH, ifstream::in);
+	if (!in.is_open())
 	{
-		if (iRetErr == SyinxSuccess)
+		LOG(ERROR) << "Syinx-Server.config.json NOT FIND";
+		return false;
+	}
+	while (getline(in, line))
+	{
+		if (*line.begin() == '#')
+			continue;
+		str.append(line + "\n");
+	}
+	in.close();
+
+	//parserJson for Syinx-Server.config.json
+	Document  doc;
+	doc.Parse<0>(str.c_str());
+	if (doc.HasParseError())
+	{
+		LOG(ERROR) << "HasParseError";
+		return false;
+	}
+	Value& GameServer = doc["GameServer"];
+	if (!GameServer["Port"].IsInt())
+	{
+		return false;
+	}
+	m_Port = GameServer["Port"].GetInt();
+
+	m_ClientContentNum = GameServer["ConnectNum"].GetInt();
+
+	m_TimerSec = GameServer["Timer-Sec"].GetInt();
+
+	Value& Pthv = GameServer["PthreadPool"];
+
+	m_PthPoolNum = Pthv["PthNum"].GetInt();
+
+	m_TaskNum = Pthv["TaskNum"].GetInt();
+
+	mUsePthreadPool = GameServer["UsePthreadPool"].GetBool();
+
+	Value& ConnectServer = GameServer["ConnectServer"];
+	m_DBPort = ConnectServer["DBServerPort"].GetInt();
+
+
+	return true;
+}
+
+bool SyinxKernel::SyinxKernelInitAdapter()
+{
+	//≥ı ºªØœﬂ≥Ãπ‹¿Ì∆˜
+	if (m_PthPoolNum > 1 && mUsePthreadPool)
+	{
+		mSyPth = new SyinxAdapterPth(m_PthPoolNum, m_TaskNum);
+		if (nullptr == mSyPth)
 		{
-			mSyinx->SyinxKernewWork = true;
-			SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::INFO, 1, "SyinxKernel_InitAdapter Success!");
+			//log
+			LOG(ERROR) << "new SyinxAdapterPth failed...";
+			return false;
+		}
+		if (mSyPth->SyinxAdapterPth_Init())
+		{
+			LOG(INFO) << "SyinxAdapterPth_Init Success";
 		}
 		else
 		{
-			mSyinx->SyinxKernewWork = false;
-			SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, 1, "SyinxKernel_InitAdapter failed!");
+			LOG(ERROR) << "new SyinxAdapterPth failed...";
+			return false;
 		}
 	}
-	return SyinxSuccess;
-}
-//Êó∂Èó¥Â§ÑÁêÜÂõûË∞É
-void SyinxKernel_TimerEvent_Cb(struct bufferevent* buffer, void* arg)
-{
-	auto mSyinx = (SyinxKernel*)arg;
-	if (mSyinx->mShmData->ExitSignal == true)
+	else
+		LOG(INFO) << "Pthread is not Init/ set Pool num = 0 or UsePthreadPool = false";
+	
+
+
+	//≥ı ºªØ◊ ‘¥π‹¿Ì∆˜
+	mSyResource = new SyinxAdapterResource(m_ClientContentNum);
+	if (nullptr == mSyResource)
 	{
-		mSyinx->SyinxKernel_Close();
+		//log
+		LOG(ERROR) << "new SyinxAdapterResource failed...";
+		return false;
 	}
-
-}
-void SyinxKernel::SyinxKernel_Addtimefd()
-{
-	//ÂÖàÂàùÂßãÂåñ‰∫ã‰ª∂ÈòüÂàó
-
-
-	struct itimerspec setitimerspec;
-	//set Âë®Êúü
-	setitimerspec.it_interval.tv_sec = this->SyConfMsg->Timerinterval;
-	setitimerspec.it_interval.tv_nsec = 0;
-
-	//set Á¨¨‰∏ÄÊ¨°
-	setitimerspec.it_value.tv_sec = this->SyConfMsg->Timervalue;
-	setitimerspec.it_value.tv_nsec = 0;
-
-	int tmfd;
-
-	tmfd = timerfd_create(CLOCK_MONOTONIC, 0);
-	if (tmfd < 0)
+	if (mSyResource->Initialize())
 	{
-
-		SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, tmfd, "timefd_create is failed");
-		return;
+		LOG(INFO) << "SyinxAdapterResource_Init Success";
 	}
-	int iRet = timerfd_settime(tmfd, 0, &setitimerspec, NULL);
-	if (iRet < 0)
+	else
 	{
-
-		SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, iRet, "timerfd_settime is failed");
-		return;
+		LOG(ERROR) << "SyinxAdapterResource_Init failed...";
+		return false;
 	}
-
-	auto buffer = bufferevent_socket_new(this->SyinxBase, tmfd, BEV_OPT_CLOSE_ON_FREE);
-
-	bufferevent_setcb(buffer, SyinxKernel_TimerEvent_Cb, NULL, NULL, (void*)mSyinx);
-
-	//ËÆæÁΩÆbuffer‰∫ã‰ª∂
-	bufferevent_enable(buffer, EV_READ);
-
+	return true;
 }
 
-int SyinxKernel::SyinxKernel_InitAdapter()
+bool SyinxKernel::RegisterSignal()
 {
-	//ÂàùÂßãÂåñÁ∫øÁ®ãÁÆ°ÁêÜÂô®
-	SyinxAdapterPth* nSyPth = new SyinxAdapterPth(SyConfMsg->PthNum, SyConfMsg->TaskNum);
+	signal(SIGINT, SIG_HANDLE);
+#ifdef __linux__
+	signal(SIGQUIT, SIG_HANDLE);
+#endif
+	return true;
+}
 
-	//ÂàùÂßãÂåñËµÑÊ∫êÁÆ°ÁêÜÂô®
-	SyinxAdapterResource* nSyRes = new SyinxAdapterResource();
+void SyinxKernel::OnStatusDoAction()
+{
+	mSyResource->GameServerDoAction();
+}
 
-	/*‰∫íÁõ∏ÁªëÂÆö*/
-	//pth
-	nSyPth->mPthRes = nSyRes;
-	nSyPth->mSyinx = mSyinx;
-
-	//res
-	nSyRes->mResPth = nSyPth;
-	nSyRes->mSyinx = mSyinx;
-	//msyinx
-	mSyinx->mSyPth = nSyPth;
-	mSyResource = nSyRes;
-
-	int iRet = 0;
-
-	//ÂàùÂßãÂåñÁ∫øÁ®ãÊ±†
-	try
-	{
-		int iRet = mSyinx->mSyPth->SyinxAdapterPth_Init();
-		throw iRet;
-	}
-	catch (int RetErr)
-	{
-		if (RetErr == -1)
-		{
-			SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, RetErr, "SyinxAdapterPth_Init is failed");
-			return RetErr;
-		}
-	}
-	return SyinxSuccess;
+void SyinxKernel::OnStatusDoClose()
+{
+	SyinxKernel_Close();
 }
 
 void SyinxKernel::SyinxKernel_Run()
 {
-	try
-	{
+	int iRet = 0;
+	uint64_t BeginMeslTime = 0;
+	uint64_t NextMeslTime = 0;
 
-		int iRet = event_base_dispatch(mSyinx->SyinxBase);
-		throw iRet;
-	}
-	catch (int err)
+	while (m_nWorkStatus)
 	{
-		SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::ERROR, err, "event_base_dispatch");
+		iRet = event_base_loop(mSyinxBase, EVLOOP_NONBLOCK);
+		if (-1 == iRet)
+		{
+			return;
+		}
+		BeginMeslTime = GetMselTime();
+		if (BeginMeslTime < NextMeslTime)
+		{
+			Skipping(1);
+			continue;
+		}
+		NextMeslTime = BeginMeslTime + 1000 / GAME_SERVER_FRAME_NUMS;
+
+		g_nGameServerSecond = time(nullptr);
+
+		time_t tmGameServerTime = g_nGameServerSecond;
+
+#if defined(WIN32) || defined(WIN64)
+		localtime_s(&g_tmGameServerTime, &tmGameServerTime);
+#elif defined(__linux)
+		localtime_r(&tmGameServerTime, &g_tmGameServerTime);
+#endif
+		(this->*m_SyinxStatusFunc[m_nWorkStatus])();
+		
+
 	}
 }
 
 void SyinxKernel::SyinxKernel_Close()
 {
-	//ÂÖ≥Èó≠ÁõëÂê¨
-	evconnlistener_free(mSyinx->SyinxListen);
-	event_base_free(mSyinx->SyinxBase);
-
-	//free
-	if (SyinxKernel::mSyinx->mSyPth != NULL)
-	{
-		SyinxKernel::mSyinx->mSyPth->SyinxAdapter_Pth_destroy();
-		delete  SyinxKernel::mSyinx->mSyPth;
-	}
-
-
-	if (SyinxKernel::mSyinx->mSyResource != NULL)
-	{
-		SyinxKernel::mSyinx->mSyResource->SyinxAdapterResource_Free();
-		delete SyinxKernel::mSyinx->mSyResource;
-	}
-
-
-	if (SyinxKernel::mSyinx != NULL)
-		delete SyinxKernel::mSyinx;
-
-	SyinxKernel::SyinxKernel_FreeShm();
-
-	cout << "Syinx is close" << endl;
-}
-
-void SyinxKernel::SyinxKernel_MakeShm()
-{
-	if (mSyinx->SyinxKernewWork == false)
-	{
+	if (!m_nWorkStatus)
 		return;
-	}
-	int shmid = shmget(SET_SHM_KEY, sizeof(SyinxKernelShmMsg), IPC_CREAT | IPC_EXCL | 0664);
-	if (-1 == shmid)
+	m_nWorkStatus = SYINX_LINK_CLOSE;
+
+	if (mSyPth != nullptr)
 	{
-		perror("shmget is failed");
-		exit(0);
+		mSyPth->SyinxAdapterPth_destroy();
+		delete mSyPth;
+		mSyPth = nullptr;
 	}
-	//
-	SyinxKernel::mSyinx->ShmId = shmid;
-	void* ShmData = shmat(shmid, NULL, 0);
-	mSyinx->ShmData = ShmData;
-	memset(ShmData, 0, sizeof(SyinxKernelShmMsg));
-	auto mShmData = (SyinxKernelShmMsg*)ShmData;
 
-	auto confMsg = mSyinx->SyConfMsg;
+	if (mSyResource != nullptr)
+	{
+		mSyResource->Close();
+		delete mSyResource;
+		mSyResource = nullptr;
+	}
+	
+	if (mSyinxBase != nullptr)
+	{
+		event_base_free(mSyinxBase);
+#ifdef WIN32
+		WSACleanup();
+#endif 
+	}
+	puts("Syinx is close! \nPress any key to continue!...");
+	getchar();
+	exit(0);
+}
 
+int SyinxKernel::JudgeSystem(void)
+{
+	int a = 1;
+	//»Áπ˚ «–°∂À‘Ú∑µªÿ1£¨»Áπ˚ «¥Û∂À‘Ú∑µªÿ0
+	return *(char*)&a;
+}
 
-	mShmData->PthNum = confMsg->PthNum;
-
-	mShmData->SyinxKernewWork = true;
-	mShmData->ExitSignal = false;
-
-	strcpy(mShmData->IP, mSyinx->Server_Sockaddr.sin_addr.c_str());
-	strcpy(mShmData->Port, mSyinx->Server_Sockaddr.Prot.c_str());
-
-	//ÂÖ±‰∫´ÂÜÖÂ≠ò‰øùÂ≠òÊ°ÜÊû∂Âú∞ÂùÄ
-	mShmData->mSyinx = SyinxKernel::mSyinx;
-
-	//Ê∞∏‰πÖ‰øùÂ≠òÂÖ±‰∫´ÂÜÖÂ≠ò
-	mSyinx->mShmData = mShmData;
-
-
+inline SyinxAdapterPth* SyinxKernel::GetPth()
+{
+	return mSyPth;
+}
+inline SyinxAdapterResource* SyinxKernel::GetResource()
+{
+	return mSyResource;
+}
+inline event_base* SyinxKernel::GetEventBase()
+{
+	return mSyinxBase != nullptr ? mSyinxBase : nullptr;
+}
+inline evconnlistener* SyinxKernel::GetListener()
+{
+	return mSyinxListen != nullptr ? mSyinxListen : nullptr;
 }
 
 
-void SyinxKernel::SyinxKernel_FreeShm()
+
+
+inline int SyinxKernel::GetPthreadPoolNum() const
 {
-	if (shmctl(mSyinx->ShmId, IPC_RMID, NULL) == -1)
-	{
-		perror("shmctl delete is failed");
-		return;
-	}
+	return m_PthPoolNum;
 }
 
-SyinxKernelShmMsg* SyinxKernel::GetSyinxKernelShmMsg()const
+inline int SyinxKernel::GetPthreadTaskNum() const
 {
-	return mShmData;
+	return m_TaskNum;
 }
 
-
-void SyinxKernelWork::PrintfServerStatus()
+int SyinxKernel::GetEndian()
 {
-
-	int shmid = shmget(SET_SHM_KEY, 0, 0);
-	if (-1 == shmid)
-	{
-		perror("Syinx is not run");
-		exit(0);
-	}
-	void* ShmData = shmat(shmid, NULL, SHM_RDONLY);
-	auto mShmData = (SyinxKernelShmMsg*)ShmData;
-	if (mShmData->SyinxKernewWork)
-	{
-		printf("\n");
-		cout << "Syinx-status:" << "\033[32;1m  run  \033[0m" << endl;
-	}
-	else
-	{
-
-		cout << "Syinx-status:" << "\033[31;1m  close  \033[0m" << endl;
-		exit(0);
-	}
-	printf("IP:[%s] Prot:[%s]\n", mShmData->IP, mShmData->Port);
-	printf("Total server connections : [%d]\n", mShmData->AllClientNum);
-
-	printf("\n");
-	if (shmdt(ShmData) == -1)
-	{
-		perror("shmdt is failed");
-		return;
-	}
-}
-void SyinxKernelWork::Makedaemon()
-{
-	int pid_t;
-	pid_t = fork();
-	if (-1 == pid_t)
-	{
-		perror("ERR : fork()");
-		exit(0);
-	}
-
-	else if (pid_t > 0)
-		exit(0);
-
-	setsid();
-	chdir("./");
-	umask(0);
-
-	SyinxKernel::SyinxKernel_Init();
-	this->mSyinx = SyinxKernel::mSyinx;
-
-	SyinxKernel::SyinxKernel_MakeShm();
-
-}
-void SyinxKernelWork::SyinxExit()
-{
-	int shmid = shmget(SET_SHM_KEY, 0, 0);
-	if (-1 == shmid)
-	{
-		perror("Syinx is not run");
-		exit(0);
-	}
-	void* ShmData = shmat(shmid, NULL, 0);
-	auto mShmData = (SyinxKernelShmMsg*)ShmData;
-
-	mShmData->ExitSignal = true;
-
-
-	if (shmdt(ShmData) == -1)
-	{
-		perror("shmdt is failed");
-		return;
-	}
-	return;
-}
-SyinxKernelWork::SyinxKernelWork(int argc, char* argv[])
-{
-	if (argc != 2)
-	{
-		cout << "ERR : Syinx Uncarried parameter" << endl;
-		exit(0);
-	}
-	if (!strcmp(COMMMEND_PARAM, "run"))
-	{
-		this->Makedaemon();
-	}
-	else if (!strcmp(COMMMEND_PARAM, "-s"))
-	{
-		//ÊâìÂç∞Áä∂ÊÄÅ
-		this->PrintfServerStatus();
-		exit(0);
-	}
-	else if (!strcmp(COMMMEND_PARAM, "-v") | !strcmp(COMMMEND_PARAM, "version"))
-	{
-		cout << "Syinx Version:0.1.8" << endl;
-		exit(0);
-	}
-	else if (!strcmp(COMMMEND_PARAM, "-c") | !strcmp(COMMMEND_PARAM, "close"))
-	{
-		this->SyinxExit();
-		exit(0);
-	}
-	else
-	{
-		cout << "ERR : Syinx Error carrying parameter" << endl;
-		exit(0);
-	}
-
+	return m_endian;
 }
 
-SyinxKernelWork::~SyinxKernelWork()
+uint64_t GetMselTime()
 {
-
+#ifdef WIN32
+	return  GetTickCount();
+#else
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	return tv.tv_sec * 1000 + tv.tv_usec / 1000;
+#endif
 }
 
-int SyinxKernelWork::SyinxWork()
+void Skipping(const int mesltime)
 {
-	SyinxKernel::SyinxKernel_Run();
-	return 1;
+#ifdef WIN32
+	Sleep(mesltime);
+#else
+	usleep(mesltime*1000);
+#endif
 }

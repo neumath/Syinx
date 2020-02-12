@@ -10,15 +10,15 @@
 
 [![Syinx](https://github.com/OnlyloveSY/ResPic/blob/master/screenshots/bhu.svg)](https://www.zhihu.com/people/lee-78-27-78/activities)
 
-基于libevent的轻量级高并发适用于游戏业务的服务器,利用任务队列的线程池模式以及事件队列来对业务进行高并发处理
+基于libevent的跨平台轻量级高并发适用于游戏业务的服务器,利用任务队列的线程池模式以及事件队列来对业务进行高并发处理
 
 Libevent-based lightweight high concurrency is applicable to the game business server, using the task queue thread pool pattern and event queue to carry out high concurrency processing of the business
 
 > 版本:
 >
-> C/C++:0.2.0
+> C/C++:0.5.0
 >
-> Golang:NULL
+> 适用平台:WIndows,Linux
 >
 > 开发: SiCen Li
 
@@ -39,7 +39,43 @@ Libevent-based lightweight high concurrency is applicable to the game business s
 
 # 如何测试(how to test?)
 
-**编译与测试**
+该框架无需安装,可以直接在代码中编辑
+
+编译测试,编译全部代码需要用到 Libevent pthread mysqlclient 第三方库
+
+Linux:
+
+`cd Syinx/`
+
+`cmake .`
+
+`make`
+
+Windows:
+
+`创建Windows C++ WIN32项目`
+
+`直接将代码拷贝到项目中,并包含代码`
+
+`下载对应的libevent  pthread的Windows版编译好的成lib文件,并添到依赖中`
+
+
+
+Windows中需要提前添加的预处理宏
+
+`WIN32`														添加该宏确保在Windows环境下运行
+
+`LIBEVENT_IOCP`										使用Windows下的IOCP网络模型
+
+`POSIX_PTHREAD`										使用posix标准的pthread库
+
+`HAVE_STRUCT_TIMESPEC`				 		 在Windows环境中使用户pthread库需要包含该宏,防止timespe的MSVC编译器的重定义报错
+
+`_CRT_SECURE_NO_WARNINGS`					在Windows环境中使用sprintf等字符串处理函数防止报错
+
+`_WINSOCK_DEPRECATED_NO_WARNINGS`    在Windows中使用windows提供的网络库函数包含该宏防止出现重定义报错,或者出现未定义(未添加Ws2_32.lib依赖库也会出现这个问题)
+
+
 
 找到bin目录的Clickme.sh脚本文件
 
@@ -81,6 +117,18 @@ Libevent-based lightweight high concurrency is applicable to the game business s
 
 
 
+框架使用了第三方HerdOnly库
+
+感谢作者的优秀的工具,方便他人开发
+
+easyloggingpp:
+
+`https://github.com/amrayn/easyloggingpp`
+
+rapidjson:
+
+`https://github.com/Tencent/rapidjson`
+
 
 
 # 概述(overview)
@@ -117,25 +165,9 @@ Libevent-based lightweight high concurrency is applicable to the game business s
 
 ### 	 四: 如何修改配置文件
 
-#设置当前的绑定的IP,如果你设置0.0.0.0,则会默认绑定你当前的所有ip地址
-`Host:0.0.0.0`
+配置文件根据`Syinx.h`头文件中的`GAME_CONFIG_PATH`宏确定你的配置文件位置,配置文件使用`rapidjson`第三方库进行配置
 
-#设置你当前的绑定的端口号,默认端口号为8855,你可以修改为其他端口
-`Port:8855`
-
-#设置线程池容量
-`SetPthNum:4`
-
-#设置当前任务队列最大队列数
-`SetTaskMax:200`
-
-#设置计时器的周期循环时间,单位为seconds
-`SetTimeinterval:1`
-
-#设置计数器的第一次延迟事件,单位为seconds
-`SetTimevalue:1`
-
-
+在`Syinx.h`中的`SyinxKernelReadconfig`函数中配置Json返序列化的初始化配置
 
 # 帮助(Help)
 
@@ -144,104 +176,33 @@ Libevent-based lightweight high concurrency is applicable to the game business s
 #include "SyTaskAdapter.h"        //需要包含任务流程处理头文件
 ```
 
-
-
-```c++
-int main()
-{
-	SyinxKernelWork a(8855);    //指定框架绑定的端口号(默认为8855),框架会默认绑定 0.0.0.0 IP地址
-	
-	return a.SyinxClose();		
-}
-```
-
-
+main.cpp函数已经确定,无需修改,只需修改`el::Configurations conf`中的配置文件路径即可
 
 ```c++
-
-#include "Syinx/Syinx.h"
-#include "Syinx/SyTaskAdapter.h"
+#include <stdio.h>
 #include <iostream>
 using namespace std;
-
-//通道层在客户端连接到服务器时会调用一次该构造函数
-IChannel::IChannel()
+#include "./Syinx/Syinx.h"
+#include "./Sylog/easylogging++.h"
+#define ELPP_THREAD_SAFE
+INITIALIZE_EASYLOGGINGPP;
+int main()
 {
+	// Load configuration from file
+	el::Configurations conf("log功能配置文件路径");
+#ifdef WIN32
+	conf.setGlobally(el::ConfigurationType::ToStandardOutput, "true");
+#endif
+	// Actually reconfigure all loggers instead
+	el::Loggers::reconfigureAllLoggers(conf);
 
+	if (!g_pSyinx.Initialize())
+		return -1;
+
+	g_pSyinx.SyinxKernel_Run();
+
+	g_pSyinx.SyinxKernel_Close();
 }
-//当客户端释放连接时该析构函数会被调用一次
-IChannel::~IChannel()
-{
-
-}
-
-
-//在默认的线程处理函数之后会自动调用IChannelWork函数,用来给玩家指定任务队列加入其它自定义任务或者lua脚本
-int IChannel::ICannelWork()
-{
-
-}
-//void* IChannelTaskProcessing(void* arg) arg为传入参数,当客户端发来一个数据报文时会调用该函数,该函数被自动压入任务队列
-//任务队列会在线程池里被处理
-
-void* IChannelTaskProcessing(void* arg)
-{
-	auto mIC = (IChannel*)arg;
-
-}
-int main(int argc, char* argv[])
-{
-	SyinxKernelWork sy(argc, argv);
-                                   
-
-                                   
-	sy.SyinxWork();
-	return sy.SyinxKernelExit;
-}
-
-
-```
-
-
-
-数据接收以及发送函数
-
-```c++
-/*
-	@   -读取当前全部数据数据到string
-	@arg:不以任何协议格式将全部数据读取string并清空占存区
-	@成功返回读取到的数据长度,失败返回-1 
-	*/
-	int RecvAllDataFromString(std::string &arg);
-
-	/*
-	@   -以协议的格式接收数据到string   len  type  values
-	@arg:以任何协议格式将values的数据读取string并清空占存区
-	@OutLen:成功读取到的数据的长度
-	@Type:成功读取到的数据类型
-	@str:成功读取到的数据
-	@成功将返回1且此时说明仍然有数据可读
-	@返回0时说明无剩余数据可读
-	@失败返回-1
-	*/
-	int RecvValuesFromString(unsigned int* _OutLen, unsigned int* _OutType, std::string& _OutStr);
-
-
-	/*
-	@   -直接发送当前string到该客户端
-	@instr:直接将当前字符串发送到当前客户端
-	@成功返回发送的数据长度,失败返回-1
-	*/
-	int SendAllDataToString(std::string &_InStr);
-
-	/*
-	@   -按协议格式转换正Asn.1的string数据包并发送 ( len  type  values)
-	@Inlen:发送数据包的长度
-	@InType:发送数据报的类型(自行指定可有可无)
-	@InStr:需要发送的数据报
-	@成功返回发送数据包的长度,失败返回-1
-	*/
-	int SendValuesToString(unsigned int _InLen, unsigned int _InType, std::string& _InStr);
 ```
 
 
@@ -339,6 +300,18 @@ Syzinx -dev 0.2.0
 ​			线程池,数据库,连接池,事件计时器均可以单独拿出来使用
 
 
+
+Syzinx -dev 0.5.0 该版本修改较为庞大,几乎摈弃了之前很多的无用功能,代码的稳定性更加高,现在此版本正在被待开中的游戏所使用
+
+​			根据之前的0.2.0修复大量bug
+
+​			新增状态机模式
+
+​			新增Reactor响应模式
+
+​			新增跨平台,现在可以再Windows以及linux中编译
+
+​			
 
 ​		
 

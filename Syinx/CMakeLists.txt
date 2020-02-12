@@ -1,9 +1,28 @@
 cmake_minimum_required(VERSION 3.02)
 
-include_directories(./module ./Timer ./Syinx ./Sylog)
+include_directories(
+./module 
+./Syinx 
+./Sylog 
+)
 
-file(GLOB srcs ./main.cpp ./module/*.cpp ./Timer/*.cpp ./Syinx/*.cpp ./Sylog/*.cpp)
+file(GLOB srcs 
+./main.cpp 
+./module/*.cpp 
+./Syinx/*.cpp 
+./Sylog/*.cpp 
+./Sylog/*.cc 
+)
 
-add_executable(Runtest ${srcs})
+LINK_DIRECTORIES(/usr/local/lib/)
 
-target_link_libraries(Runtest pthread event mysqlclient)
+add_executable(gameserver ${srcs})
+
+
+TARGET_LINK_LIBRARIES (
+gameserver 
+-lpthread 
+-levent
+-lprotobuf
+-lmysqlclient
+)

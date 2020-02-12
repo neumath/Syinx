@@ -1,122 +1,129 @@
-#include "SyAdapter.h"
-
 #ifndef _SYTASKADAPTER_H_
 #define _SYTASKADAPTER_H_
+#include <vector>
 class SyinxLog;
 class SyinxAdapterResource;
-struct IChannelMsg
+class IChannel;
+class CPlayer;
+struct bufferevent;
+
+class IChannel 
 {
-
-	int             Socket;                  /*ä¿å­˜å¥—æ¥å­—*/
-
-	bufferevent* buffer;                  /*ä¿å­˜buffer*/
-
-	int             ClientID;                /*å®¢æˆ·ç«¯å”¯ä¸€id*/
-
-};
-enum BufferErrno {
-
-	//å¦‚æœç¼“å†²åŒºå¹¶æ²¡æœ‰æ¥æ”¶åˆ°æ•°æ®è¿”å›-1å¹¶è®¾ç½®errno
-	BufferNull = -1,
-
-	//å¦‚æœè¿˜æœ‰æ•°æ®åˆ™è¿”å›1å¹¶è®¾ç½®errno
-	BufferSucc = 1,
-	//å¦‚æœç¼“å†²åŒºåœ¨æ¥æ”¶æ¥æ”¶æ•°æ®ååç»­æ²¡æœ‰æ•°æ®,è¿”å›0å¹¶è®¾ç½®errno
-	BufferEnd = 0,
-};
-//ä»»åŠ¡å¤„ç†ç±»
-class SyinxAdapterMission : public SyinxAdapter
-{
-public:
-	SyinxAdapterMission() {}
-	virtual ~SyinxAdapterMission() {}
-public:
-
-
-};
-
-//åˆ›å»ºé€šé“å±‚å·¥å‚ç±»ç”¨äºä¸€ç³»åˆ—åˆå§‹åŒ–
-class IChannelFactory
-{
-public:
-	IChannelFactory() {}
-	~IChannelFactory() {}
-};
-
-//é€šé“å±‚æ•°æ®æµå¯¹åº”ç¼“å­˜
-struct StringByte
-{
-	std::string _InStr;
-	int _InSize;
-
-};
-class IChannel : public SyinxAdapterMission
-{
+	friend void SyinxKernel_Recv_Cb(struct bufferevent* bev, void* ctx);
 	friend class SyinxAdapterResource;
 public:
-	IChannel();
-	virtual ~IChannel();
-public:
-
-	int ICannelWork();
-	/*
-	@   -è¯»å–å½“å‰å…¨éƒ¨æ•°æ®æ•°æ®åˆ°string
-	@arg:ä¸ä»¥ä»»ä½•åè®®æ ¼å¼å°†å…¨éƒ¨æ•°æ®è¯»å–stringå¹¶æ¸…ç©ºå å­˜åŒº
-	@æˆåŠŸè¿”å›è¯»å–åˆ°çš„æ•°æ®é•¿åº¦,å¤±è´¥è¿”å›-1
-	*/
-	int RecvAllDataFromString(std::string& arg);
-
-	/*
-	@   -ä»¥åè®®çš„æ ¼å¼æ¥æ”¶æ•°æ®åˆ°string   len  type  values
-	@arg:ä»¥ä»»ä½•åè®®æ ¼å¼å°†valuesçš„æ•°æ®è¯»å–stringå¹¶æ¸…ç©ºå å­˜åŒº
-	@OutLen:æˆåŠŸè¯»å–åˆ°çš„æ•°æ®çš„é•¿åº¦
-	@Type:æˆåŠŸè¯»å–åˆ°çš„æ•°æ®ç±»å‹
-	@str:æˆåŠŸè¯»å–åˆ°çš„æ•°æ®
-	@æˆåŠŸå°†è¿”å›1ä¸”æ­¤æ—¶è¯´æ˜ä»ç„¶æœ‰æ•°æ®å¯è¯»
-	@è¿”å›0æ—¶è¯´æ˜æ— å‰©ä½™æ•°æ®å¯è¯»
-	@å¤±è´¥è¿”å›-1
-	*/
-	int RecvValuesFromString(unsigned int* _OutLen, unsigned int* _OutType, std::string& _OutStr);
-
-
-	/*
-	@   -ç›´æ¥å‘é€å½“å‰stringåˆ°è¯¥å®¢æˆ·ç«¯
-	@instr:ç›´æ¥å°†å½“å‰å­—ç¬¦ä¸²å‘é€åˆ°å½“å‰å®¢æˆ·ç«¯
-	@æˆåŠŸè¿”å›å‘é€çš„æ•°æ®é•¿åº¦,å¤±è´¥è¿”å›-1
-	*/
-	int SendAllDataToString(std::string& _InStr);
-
-	/*
-	@   -æŒ‰åè®®æ ¼å¼è½¬æ¢æ­£Asn.1çš„stringæ•°æ®åŒ…å¹¶å‘é€ ( len  type  values)
-	@Inlen:å‘é€æ•°æ®åŒ…çš„é•¿åº¦
-	@InType:å‘é€æ•°æ®æŠ¥çš„ç±»å‹(è‡ªè¡ŒæŒ‡å®šå¯æœ‰å¯æ— )
-	@InStr:éœ€è¦å‘é€çš„æ•°æ®æŠ¥
-	@æˆåŠŸè¿”å›å‘é€æ•°æ®åŒ…çš„é•¿åº¦,å¤±è´¥è¿”å›-1
-	*/
-	int SendValuesToString(unsigned int _InLen, unsigned int _InType, std::string& _InStr);
-
-
-	//ä»“åº“æŒ‡é’ˆ,å¯ä»¥æŒ‡å®šé€šé“æºå¸¦ä¸€ä¸ªä½¿ç”¨è€…æ‰€æŒ‡å®šæ•°æ®
-	void* Stroage;
-
-
-	//æ•°æ®ç¼“å­˜ç»“æ„ä½“
-	StringByte* StrByte;
-
-	//ä¿å­˜é€šé“å±‚çš„å±æ€§
-	IChannelMsg* mICMsg;
+	enum ICNANNEL_LINK_STATUS
+	{
+		CLIENT_LOGOUT = 1,
+		CLIENT_LOGIN = 2,
+	};
 private:
-	//åˆå§‹åŒ–é€šé“å±‚
-	int ICannel_Init(IChannelMsg* Info);
-	//é”€æ¯é€šé“å±‚
-	void IChannel_free();
+	/*
+	* µ±Ç°ICh±»·ÖÅäµÄÒ»¸öSocketÌ×½Ó×Ö
+	*/
+	int					 m_Socket;
 
-	//å°†è¯»å–åˆ°çš„æ•°æ®æ”¾åˆ°ç¼“å­˜åŒº
-	int DatatoInStrByte(char* buf);
+	/*
+	* ±»·ÖÅäµÄÒ»¸ö¿Í»§¶ËID
+	*/
+	int					 m_ClientID;
+
+	/*
+	* ¸ø¿Í»§¶Ë·ÖÅäµÄÒ»¸ölibevent  bufferevent »º´æ
+	*/
+	bufferevent*		 m_buffer;
+
+	/*
+	* Íæ¼ÒµÄÖ¸Õë
+	*/
+	CPlayer* m_pPlayer;
+
+	/*
+	* Íæ¼ÒµÄFrame»º´æ
+	*/
+	std::vector<string>	 m_ClientBuffer;
+
+	typedef bool (IChannel::*RecvBufferParse)(std::string& _Instr, uint32_t& _OutLen, uint32_t& _OutType, std::string& _OutStr);
+	RecvBufferParse ParseFunc;
+
+	typedef bool (IChannel::*Callalbe)(uint32_t& _InLen, uint32_t& _InType, std::string& _InStr);
+	Callalbe		CallFunc;
+
+	bool DoNotBindParse;
+public:
+	IChannel();
+	~IChannel();
+	/*
+	*³õÊ¼»¯Ò»¸öÍ¨µÀ²ã
+	*/
+	bool Initialize();
+
+	/*
+	*µ±¿Í»§¶ËÁ¬½ÓÊ±·ÖÅäÒ»¸öbuffer
+	*/
+	int  OnClientConnect(int _fd, bufferevent* buffer, int m_ClientID = 0);
+
+	/*
+	* ¶ÁÈ¡×öÂß¼­´¦Àí
+	*/
+	void OnStatusDoAction();
+
+	/*
+	*	±ØĞë¸æËß¿ò¼Ü,°ó¶¨½ÓÊÕµ½µÄÂß¼­Ö¡×öÈçºÎµÄ½âÎö 
+	*
+	*/
+	void SetupFrameInputFunc();
+
+	/*
+	* »ñÈ¡¿Í»§¶Ë·¢À´µÄFrame·ÅÈëµ½»º´æÖĞ
+	*/
+	void GetClientFrameOnBuffer(std::string& _instr);
+
+	/*
+	* ²é¿´ÊÇ·ñÓÃ»§°ó¶¨ÁË½âÎöº¯Êı
+	*/
+	inline bool GetWhetherBindParseFunc();
 
 
-private://ç»‘å®šèµ„æºç®¡ç†å™¨
-	SyinxAdapterResource* mICnSaveRes;
+
+	//Ğ­Òé½âÎö
+	bool RecvValuesFromString(string& _InStr, uint32_t& _OutLen, uint32_t& _OutType, std::string& _OutStr);
+	bool RecvClientPack(uint32_t& _InLen, uint32_t& _InType, std::string& _InStr);
+
+	bool SendValuesToString(uint32_t _InLen, uint32_t _InType, std::string& _InStr);
+
+	
+	/*
+	* µ±¿Í»§¶ËÍË³öÊ±µ÷ÓÃ¸Ãº¯ÊıÓÃÀ´ÇåÀíµ±Ç°µÄ»º´æ
+	*/
+	bool Clear();
+
+	/*
+	
+	*/
+	int					GetUniqueID()const;
+	int					GetSocket()const;
+	bufferevent*		GetBuffer();
+	CPlayer*			GetCPlayer();
+	int					IChStatus;
+private:
+	/*
+	*°ó¶¨´¦ÀíµÄ»òÕß½âÎöµÄº¯ÊıĞèÒªÓÃ»§×Ô¼º¶¨ÒåÈçºÎÈ¥½âÎö
+	bool RecvBufferParse(std::string& _Instr, uint32_t& _OutLen, uint32_t& _OutType, std::string& _OutStr);
+	_InStrÊÇÒ»¸ö´«ÈëµÄÔ­Ê¼×Ö·û´®
+	_OutLenÊÇ½âÎöÍêºó´«³öµÄ³¤¶È
+	_OutTypeÊÇ½âÎöÍêºó´«³öµÄÀàĞÍ
+	_OutStrÊÇ½âÎöÍêºó´«³öµÄIO°ü
+
+	·µ»ØÖµ´¦Àí:IO´«Êä¹ı³ÌÖĞ¿ÉÄÜ»á·¢ÏÖÕ³°ü,Èç¹ûÒ»¸öInStrÖĞ°üº¬Á½¸öÂß¼­Ö¡,ÄÇÃ´ÔÚ½âÎöÍê×îºóÒ»¸öÖ¡ºó±ØĞë¸æËß¿ò¼Ü·µ»Øfalse,ÒÔ×ö·ÀÕ³°ü´¦Àí
+	·ñÔò¿Ï¶¨»á·¢ÉúËÀÑ­»·
+
+	bool Callalbe(uint32_t& _InLen, uint32_t& _InType, std::string& _InStr)
+	//µ±½âÎöÍæIOºó½«»áµ÷ÓÃCallalbe¸ù¾İÖ®Ç°µÄµ÷ÓÃË³Ğò½øĞĞ´«Èë
+
+	*/
+	void BindParse(bool (IChannel::*RecvBufferParse)(std::string& _Instr, uint32_t& _OutLen, uint32_t& _OutType, std::string& _OutStr), bool (IChannel::* Callalbe)(uint32_t& _InLen, uint32_t& _InType, std::string& _InStr));
+	
 };
 
 #endif

@@ -1,133 +1,222 @@
+#include "../Syinx/SyInc.h"
 #include "../Syinx/Syinx.h"
+#include "../Sylog/easylogging++.h"
 #include "SyMysqlConPool.h"
 #include "../Sylog/SyLog.h"
 using namespace std;
 
-SyMysqlConPool* SyMysqlConPool::Mysqlpool = nullptr;
-MYSQL* SyMysqlConPool::GetMysqlHandle()
+SyMysqlConPool& g_pMysqlPool = SyMysqlConPool::MakeSingleton();
+
+
+SyMysqlConPool::SyMysqlConPool()
 {
-	return SyMysqlConPool::Mysqlpool->GetMysql();
+	m_MysqlMaxnum = 0;
+	m_Count = 0;
+	m_Capacity = 0;
+	m_vecReslut.clear();
 }
 
-int SyMysqlConPool::PutMysqlHandle(MYSQL* mysql_t)
+SyMysqlConPool::~SyMysqlConPool()
 {
-	return SyMysqlConPool::Mysqlpool->PutMysql(mysql_t);
+	m_MysqlMaxnum = 0;
+	m_Count = 0;
+	m_Capacity = 0;
+	m_vecReslut.clear();
 }
 
-int SyMysqlConPool::SyMysqlConPool_Init(int connum, string _HOST_, string _USER_, string _PASSWD_, string _DATABASE_)
+SyMysqlConPool& SyMysqlConPool::MakeSingleton()
 {
-	if (this->Work)
+	// TODO: ÔÚ´Ë´¦²åÈë return Óï¾ä
+	static SyMysqlConPool mysql;
+	return mysql;
+}
+
+bool SyMysqlConPool::Initialize(int connum, string _HOST_, string _USER_, string _PASSWD_, string _DATABASE_)
+{
+
+	//³õÊ¼»¯½á¹¹ÌåĞÅÏ¢
+	m_strHost = _HOST_;
+	m_strUser = _USER_;
+	m_strPasswd = _PASSWD_;
+	m_strDatabase = _DATABASE_;
+	m_Capacity = connum;
+	//³õÊ¼»¯Ëø
+	if (pthread_mutex_init(&m_mutex, NULL) != 0)
 	{
-		return MysqlInitErr;
-	}
-	SyMysqlConPool::Mysqlpool = new SyMysqlConPool;
-	Mysqlpool->mysqlpool_t = new MysqlConPool_t;
-
-	//åˆå§‹åŒ–ç»“æ„ä½“ä¿¡æ¯
-	Mysqlpool->mysqlpool_t->_HOST_ = _HOST_;
-	Mysqlpool->mysqlpool_t->_USER_ = _USER_;
-	Mysqlpool->mysqlpool_t->_PASSWD_ = _PASSWD_;
-	Mysqlpool->mysqlpool_t->_DATABASE_ = _DATABASE_;
-	Mysqlpool->mysqlpool_t->count = 0;
-
-	/*cout << connum << endl;
-	cout << "[" << _HOST_.c_str() << "]" << endl;
-	cout << "[" << _USER_.c_str() << "]" << endl;
-	cout << "[" << _PASSWD_.c_str() << "]" << endl;
-	cout << "[" << _DATABASE_.c_str() << "]" << endl;*/
-
-	//åˆå§‹åŒ–é”
-	if (pthread_mutex_init(&Mysqlpool->mysqlpool_t->mutex, NULL) != 0)
-	{
-		return MysqlMutexInitErr;
+		return false;
 	}
 
-	//åˆå§‹åŒ–è¿æ¥æ± 
-	//ä¸€ä¸ªåˆå§‹åŒ–å¤±è´¥æˆ–è€…è¿æ¥å¤±è´¥å…¨éƒ¨å›æ»š
+	//³õÊ¼»¯Á¬½Ó³Ø
+	//Ò»¸ö³õÊ¼»¯Ê§°Ü»òÕßÁ¬½ÓÊ§°ÜÈ«²¿»Ø¹ö
 	for (int i = 0; i < connum; ++i)
 	{
 		auto Mysql_t = mysql_init(NULL);
 		if (Mysql_t == NULL)
 		{
-			return MysqlInitErr;
+			return false;
 		}
-		Mysql_t = mysql_real_connect(Mysql_t, _HOST_.c_str(), _USER_.c_str(), _PASSWD_.c_str(), _DATABASE_.c_str(), 0, NULL, 0);
-		if (Mysql_t == NULL)
+		if (mysql_real_connect(Mysql_t, _HOST_.c_str(), _USER_.c_str(), _PASSWD_.c_str(), _DATABASE_.c_str(), 3306, NULL, 0)!=nullptr)
 		{
-			return MysqlConErr;
+			m_queueMysql.push(Mysql_t);
 		}
-		char WriteLog[64] = { 0 };
-		sprintf(WriteLog, "The [%d]th attempt to connect was successful", i);
-		SyinxLog::mLog.Log(__FILE__, __LINE__, SyinxLog::INFO, 0, WriteLog);
-		Mysqlpool->mysqlpool_t->MysqlPoolList.push_back(Mysql_t);
-		Mysqlpool->mysqlpool_t->MysqlMaxnum += 1;
-		Mysqlpool->mysqlpool_t->count += 1;
+		else
+		{
+			int i = mysql_errno(Mysql_t);
+			const char* s = mysql_error(Mysql_t);
+			LOG(ERROR) << "ERROR : " << s << " ERRON: " << i;
+		}
+		
 	}
-	this->Work = true;
-	return MysqlSuccess;
+	if (m_queueMysql.size() == connum)
+	{
+		LOG(INFO) << m_queueMysql.size() << " Connect Mysql:[" << _HOST_.c_str() << "] Success";
+		return true;
+	}
+	else
+	{
+		LOG(INFO) << m_queueMysql.size() << " Connect Mysql:[" << _HOST_.c_str() << "] Failed";
+		return false;
+	}
 }
 
-int SyMysqlConPool::SyMysqlConPool_destroy()
+MYSQL* SyMysqlConPool::GetMysqlHandle()
 {
-
-	//é‡Šæ”¾é”
-	if (pthread_mutex_destroy(&this->mysqlpool_t->mutex) != 0)
+	if (m_queueMysql.empty())
 	{
-		return MysqlMutexdesErr;
+		return nullptr;
 	}
-
-	//å…³é—­è¿æ¥
-	for (auto _it : this->mysqlpool_t->MysqlPoolList)
-	{
-		mysql_close(_it);
-	}
-
-	delete mysqlpool_t;
-	return MysqlSuccess;
+	auto Mysql = m_queueMysql.front();
+	m_queueMysql.pop();
+	return Mysql;
 }
 
-MYSQL* SyMysqlConPool::GetMysql()
+bool SyMysqlConPool::PutMysqlHandle(MYSQL*Mysql)
 {
-	//é”ä½æœ¬ç»“æ„ä½“
-	if (pthread_mutex_lock(&mysqlpool_t->mutex) != 0)
-	{
-		return NULL;
-	}
-	if (mysqlpool_t->count == 0 || mysqlpool_t->MysqlPoolList.size() == 0)
-	{
-		pthread_mutex_unlock(&mysqlpool_t->mutex);
-		return NULL;
-	}
-	//è·å–æœ«å°¾å…ƒç´ 
-	auto _itlist = mysqlpool_t->MysqlPoolList.back();
-	mysqlpool_t->count -= 1;
+	if (Mysql == nullptr)
+		return false;
 
-	//åˆ é™¤æœ«å°¾å…ƒç´ 
-	mysqlpool_t->MysqlPoolList.pop_back();
-
-
-	if (pthread_mutex_unlock(&mysqlpool_t->mutex) != 0)
-	{
-		return NULL;
-	}
-	return _itlist;
-
+	m_queueMysql.push(Mysql);
+	return true;
 }
 
-int SyMysqlConPool::PutMysql(MYSQL* _in)
+void SyMysqlConPool::close()
 {
-	//é”ä½æœ¬ç»“æ„ä½“
-	if (pthread_mutex_lock(&mysqlpool_t->mutex) != 0)
+	auto MysqlSize = m_queueMysql.size();
+	for (int Index = 0; Index < MysqlSize; ++Index)
 	{
-		return MysqlLockErr;
+		auto Mysql = m_queueMysql.front();
+		if (Mysql)
+			mysql_close(Mysql);
+		m_queueMysql.pop();
 	}
-	//å¤´éƒ¨æ’å…¥ä¸€ä¸ªmysql
-	mysqlpool_t->MysqlPoolList.push_front(_in);
-	mysqlpool_t->count += 1;
+}
 
-	if (pthread_mutex_unlock(&mysqlpool_t->mutex) != 0)
+bool SyMysqlConPool::MysqlCarryOutQuery(MYSQL* mysql, const char* sql, bool IsSelect)
+{
+	if (mysql == nullptr)
 	{
-		return MysqlUnLockErr;
+		LOG(ERROR) << "Mysql Handle is null";
+		return false;
 	}
-	return MysqlSuccess;
+	auto ret = mysql_query(mysql, sql);
+	if (ret)
+	{
+		LOG(ERROR) << mysql_error(mysql);
+		return false;
+	}
+	if (IsSelect) {
+		auto Reslut = mysql_store_result(mysql);
+		if (Reslut == nullptr)
+		{
+			LOG(ERROR) << "mysql_store_result failed";
+			return false;
+		}
+		long int Rows = 0;
+		unsigned int Fields = 0;
+
+		MYSQL_ROW rows = NULL;
+
+		int Index = 0;
+		Rows = mysql_num_rows(Reslut);
+		Fields = mysql_num_fields(Reslut);
+
+		while (true)
+		{
+			rows = mysql_fetch_row(Reslut);
+			if (NULL == rows)
+			{
+				break;
+			}
+			vector<string> tarData;
+			for (Index = 0; Index < Fields; ++Index)
+			{
+				if (rows[Index] != nullptr)
+					tarData.push_back(rows[Index]);
+				else
+				{
+					string str;
+					tarData.push_back(str);
+				}
+			}
+			m_vecReslut.push_back(tarData);
+		}
+	}
+	return true;
+}
+
+void SyMysqlConPool::GetInt(uint32_t row, uint32_t col, int* out)
+{
+	if ((row > 0 && row <= GetRows()) && (col > 0 && col <= GetCols()))
+	{
+		*out = atoi(m_vecReslut[row-1][col-1].c_str());
+		return;
+	}
+	*out = -1;
+}
+
+void SyMysqlConPool::GetString(uint32_t row, uint32_t col, string* out)
+{
+	if ((row > 0 && row <= GetRows()) && (col > 0 && col <= GetCols()))
+	{
+		*out = m_vecReslut[row - 1][col - 1];
+	}
+	
+}
+
+void SyMysqlConPool::GetFloat(uint32_t row, uint32_t col, float* out)
+{
+	if ((row > 0 && row <= GetRows()) && (col > 0 && col <= GetCols()))
+	{
+		*out = atof(m_vecReslut[row - 1][col - 1].c_str());
+		return;
+	}
+	*out = -0.1f;
+}
+
+void SyMysqlConPool::GetDouble(uint32_t row, uint32_t col, double* out)
+{
+	
+}
+
+int SyMysqlConPool::GetRows()
+{
+	return m_vecReslut.size();
+}
+
+int SyMysqlConPool::GetCols()
+{
+	if (m_vecReslut.empty())
+	{
+		return 0;
+	}
+	return m_vecReslut.begin()->size();
+}
+
+void SyMysqlConPool::Clear()
+{
+	for (auto Iter : m_vecReslut)
+	{
+		Iter.clear();
+	}
+	m_vecReslut.clear();
 }

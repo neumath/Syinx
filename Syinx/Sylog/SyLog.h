@@ -26,7 +26,7 @@ public:
 		DEBUG,
 		INFO,
 		WARNING,
-		ERROR,
+		LOGERROR,
 		EVENT,
 	};
 	void Log(const char* file, int line, int level, int status, const char* fmt, ...);
@@ -41,4 +41,5 @@ private:
 
 };
 
+extern SyinxLog mLog;
 #endif
